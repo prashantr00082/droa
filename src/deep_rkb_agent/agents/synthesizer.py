@@ -14,10 +14,8 @@ def _load_prompt(name: str) -> Template:
 
 
 def _get_llm():
-    base_url = os.environ.get("LLM_BASE_URL_SYNTHESIS", "http://localhost:8000/v1")
-    api_key = os.environ.get("LLM_API_KEY_SYNTHESIS", "dummy")
-    model = os.environ.get("LLM_MODEL_SYNTHESIS", "gpt-4")
-    return ChatOpenAI(model=model, base_url=base_url, api_key=api_key, temperature=0)
+    from deep_rkb_agent.llm_utils import get_llm
+    return get_llm("complex")
 
 
 def _load_ontology_concepts(repo_root: str) -> str:

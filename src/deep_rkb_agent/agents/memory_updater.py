@@ -1,17 +1,11 @@
 import os
-from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
 from langchain import hub
 from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel, Field
 
 class RuleExtraction(BaseModel):
     rule: str = Field(description="A single, generalized sentence rule extracted from the critique. Must be actionable.")
-
-def _get_llm():
-    base_url = os.environ.get("LLM_BASE_URL_COMPLEX", "http://localhost:8000/v1")
-    api_key = os.environ.get("LLM_API_KEY_COMPLEX", "dummy")
-    model = os.environ.get("LLM_MODEL_COMPLEX", "gpt-4")
-    return ChatOpenAI(model=model, base_url=base_url, api_key=api_key, temperature=0)
+from deep_rkb_agent.llm_utils import get_llm
 
 def extract_and_store_rule(repo_root: str, critique: str):
     print("  [Memory Updater] Extracting rule from critique for Continual Learning...")
@@ -24,7 +18,7 @@ An adversarial reviewer just rejected an agent's output with this critique:
 Extract a single, generalized rule (1 sentence) that the agent should follow in the future to avoid this mistake.
 Return ONLY valid JSON matching the requested schema."""
 
-    llm = _get_llm()
+    llm = get_llm("complex")
     from deep_rkb_agent.llm_utils import robust_invoke
     
     try:

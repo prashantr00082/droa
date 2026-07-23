@@ -1,7 +1,7 @@
 import os
 import json
 from typing import List
-from langchain_openai import ChatOpenAI
+
 from pydantic import BaseModel
 from deep_rkb_agent.schemas import ModuleSidecar
 from deep_rkb_agent.tools.ast_parser import extract_symbols
@@ -19,6 +19,8 @@ class ModuleChunkSummary(BaseModel):
     citations: List[str]
 
 
+from deep_rkb_agent.llm_utils import get_llm
+
 def _get_llm(ast_data: dict, total_lines: int):
     """
     Heuristic model router for local inference servers.
@@ -32,29 +34,11 @@ def _get_llm(ast_data: dict, total_lines: int):
     num_lines = total_lines
     
     if total_symbols > 5 or num_lines > 200:
-        model = os.environ.get("LLM_MODEL_COMPLEX", "glm-5.2-fp8")
-        base_url = os.environ.get("LLM_BASE_URL_COMPLEX", "http://localhost:8000/v1")
-        api_key = os.environ.get("LLM_API_KEY_COMPLEX", "dummy")
-        
-        print(f"      [Router] Complex file detected ({total_symbols} symbols, {num_lines} lines). Routing to {model}.")
-        return ChatOpenAI(
-            model=model,
-            base_url=base_url,
-            api_key=api_key,
-            temperature=0
-        )
+        print(f"      [Router] Complex file detected ({total_symbols} symbols, {num_lines} lines). Routing to Complex Model.")
+        return get_llm("complex")
     else:
-        model = os.environ.get("LLM_MODEL_SIMPLE", "Qwen/Qwen3-VL-235B-A22B-Instruct-FP8")
-        base_url = os.environ.get("LLM_BASE_URL_SIMPLE", "http://localhost:8000/v1")
-        api_key = os.environ.get("LLM_API_KEY_SIMPLE", "dummy")
-        
-        print(f"      [Router] Simple file detected ({total_symbols} symbols, {num_lines} lines). Routing to {model}.")
-        return ChatOpenAI(
-            model=model,
-            base_url=base_url,
-            api_key=api_key,
-            temperature=0
-        )
+        print(f"      [Router] Simple file detected ({total_symbols} symbols, {num_lines} lines). Routing to Simple Model.")
+        return get_llm("simple")
 
 
 def _read_all_lines(filepath: str) -> List[str]:
