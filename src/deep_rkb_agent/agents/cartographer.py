@@ -62,8 +62,8 @@ def build_concepts(repo_root: str) -> OntologyConcepts:
     )
 
     llm = _get_llm()
-    structured_llm = llm.with_structured_output(OntologyConcepts)
-    result: OntologyConcepts = structured_llm.invoke(prompt)
+    from deep_rkb_agent.llm_utils import robust_invoke
+    result: OntologyConcepts = robust_invoke(llm, prompt, OntologyConcepts)
     return result
 
 
@@ -76,8 +76,8 @@ def build_relationships(repo_root: str) -> OntologyRelationships:
     prompt = template.render(import_graph=json.dumps(import_graph, indent=2))
 
     llm = _get_llm()
-    structured_llm = llm.with_structured_output(OntologyRelationships)
-    result: OntologyRelationships = structured_llm.invoke(prompt)
+    from deep_rkb_agent.llm_utils import robust_invoke
+    result: OntologyRelationships = robust_invoke(llm, prompt, OntologyRelationships)
     return result
 
 
@@ -94,8 +94,8 @@ def build_flows(repo_root: str) -> OntologyFlows:
     )
 
     llm = _get_llm()
-    structured_llm = llm.with_structured_output(OntologyFlows)
-    result: OntologyFlows = structured_llm.invoke(prompt)
+    from deep_rkb_agent.llm_utils import robust_invoke
+    result: OntologyFlows = robust_invoke(llm, prompt, OntologyFlows)
     return result
 
 
@@ -120,8 +120,8 @@ def build_organization(repo_root: str) -> OntologyOrganization:
     )
 
     llm = _get_llm()
-    structured_llm = llm.with_structured_output(OntologyOrganization)
-    result: OntologyOrganization = structured_llm.invoke(prompt)
+    from deep_rkb_agent.llm_utils import robust_invoke
+    result: OntologyOrganization = robust_invoke(llm, prompt, OntologyOrganization)
     return result
 
 

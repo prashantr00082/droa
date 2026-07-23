@@ -74,11 +74,11 @@ def document_module(repo_root: str, file_path: str) -> ModuleSidecar:
         file_content=file_content
     )
     
-    # 4. Invoke LLM with Structured Outputs
+    # 4. Invoke LLM with Robust Parsing
+    from deep_rkb_agent.llm_utils import robust_invoke
     llm = _get_llm(ast_data, file_content)
-    structured_llm = llm.with_structured_output(ModuleSidecar)
     
     print(f"    -> Invoking LLM for {file_path}...")
-    result: ModuleSidecar = structured_llm.invoke(prompt_text)
+    result: ModuleSidecar = robust_invoke(llm, prompt_text, ModuleSidecar)
     
     return result
