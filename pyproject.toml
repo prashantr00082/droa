@@ -1,0 +1,23 @@
+[project]
+name = "deep-rkb-agent"
+version = "0.1.0"
+description = "Deep Repository Ontology Agent"
+requires-python = ">=3.9"
+dependencies = [
+    "langgraph",
+    "langgraph-checkpoint-sqlite",
+    "langchain",
+    "langchain-openai",
+    "langchain-google-genai",
+    "jinja2",
+    "pydantic",
+    "rich",
+    "tree-sitter",
+    "tree-sitter-python",
+    "tree-sitter-java",
+    "tree-sitter-go"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

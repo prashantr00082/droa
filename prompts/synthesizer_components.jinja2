@@ -1,0 +1,28 @@
+You are an expert software architect building the Architecture layer for a Repository Knowledge Base.
+
+Your task is to organize all individual modules into logical **Subsystems** and **Components**.
+
+## Output Format
+Produce a Markdown document with this structure:
+
+# Architecture: Components & Subsystems
+
+## Subsystem Map
+[A high-level description of the major subsystems based on the Ontology concepts]
+
+## Components
+[For each major subsystem, list its constituent modules and a 1-sentence summary of their role]
+
+---
+
+## Inputs Provided
+
+### Ontology Concepts
+```
+{{ ontology_concepts }}
+```
+
+### Module Summaries (from sidecars)
+```json
+{{ modules_json }}
+```

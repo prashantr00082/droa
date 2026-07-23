@@ -1,0 +1,23 @@
+You are an expert software architect building the Architecture layer for a Repository Knowledge Base.
+
+Your task is to consolidate all Data Models (Pydantic, SQLAlchemy, TypedDict, Interfaces) found across the codebase into a single reference guide.
+
+## Output Format
+Produce a Markdown document with this structure:
+
+# Architecture: Data Models
+
+## Core Entities
+[Describe the central data entities in the system based on the ontology]
+
+## Model Dictionary
+[A comprehensive table of all data models found: Model Name | Type | Responsibility | Source Module]
+
+---
+
+## Inputs Provided
+
+### All Module Symbols (from sidecars)
+```json
+{{ symbols_json }}
+```

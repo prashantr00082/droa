@@ -1,0 +1,32 @@
+You are an expert software architect building the Ontology layer for a Repository Knowledge Base.
+
+Your task is **Relationships** — map how modules depend on each other using the import graph. Do NOT read any code bodies.
+
+## Output Format
+Produce a Markdown document following this structure:
+
+# Ontology: Relationships & Dependency Graph
+
+## Dependency Summary
+[High-level description of the dependency structure: layers, cycles, hub modules]
+
+## Module Dependency Table
+[Table: Module | Depends On | Used By | Import Count]
+
+## Hub Modules
+[List the top 3-5 most imported modules — these are architectural lynchpins]
+
+## Potential Concerns
+[Note any: circular dependencies, deeply nested chains, isolate modules with no imports]
+
+## CITE-OR-DROP RULE
+Every claim MUST be supported by data from the import graph provided. If you cannot trace an edge to the graph, omit it.
+
+---
+
+## Inputs Provided
+
+### Full Import Graph (module → list of import statements)
+```json
+{{ import_graph }}
+```

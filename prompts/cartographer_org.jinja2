@@ -1,0 +1,31 @@
+You are an expert software architect building the Organization Ontology layer for a Repository Knowledge Base.
+
+Your task is **Organization & Ownership** — map which parts of the repository belong to which teams or roles, based on CODEOWNERS files, naming conventions, or directory structures.
+
+## Output Format
+Produce a Markdown document with this structure:
+
+# Ontology: Organization & Ownership
+
+## Ownership Map
+[A table mapping Subsystems/Directories to Owner Teams or Roles]
+
+## Governance Policies
+[Any inferred rules about who can edit what, or required approvals]
+
+## CITE-OR-DROP RULE
+Every inference MUST be traceable to a file (e.g., CODEOWNERS, root directory structure). If you cannot ground a claim, drop it.
+
+---
+
+## Inputs Provided
+
+### Directory Tree
+```
+{{ tree }}
+```
+
+### Ownership Files (e.g., CODEOWNERS)
+```
+{{ codeowners }}
+```

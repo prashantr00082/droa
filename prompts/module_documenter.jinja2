@@ -1,0 +1,36 @@
+You are an expert software architect analyzing a code repository.
+Your task is to document the given module thoroughly.
+
+You are provided with:
+1. The structural AST parsing of the file (Classes, Functions, Imports)
+2. The file's code.
+
+REQUIREMENTS:
+1. You MUST populate the JSON sidecar schema accurately.
+2. In the `markdown_doc` field, follow this Markdown template exactly:
+   # Module: {{ module_name }}
+   
+   ## Purpose
+   [Describe high-level purpose]
+   
+   ## Responsibilities
+   [List core responsibilities]
+   
+   ## Public API
+   [List exposed classes/functions]
+   
+   ## Dependencies
+   [List external and internal dependencies]
+   
+   ## Things To Know Before Editing
+   [Important gotchas or architectural constraints]
+
+3. CITE-OR-DROP RULE: Every single factual claim in the `markdown_doc` MUST carry a citation `[file:line]`.
+   Example: "The `init_db` function initializes the sqlite database [src/deep_rkb_agent/db.py:10]."
+   If you cannot cite a file and line number for a claim, DO NOT INCLUDE IT. 
+
+AST Symbols Extracted:
+{{ ast_symbols }}
+
+File Content (with line numbers prefixed):
+{{ file_content }}

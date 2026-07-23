@@ -1,0 +1,43 @@
+You are an expert software architect building the Ontology layer for a Repository Knowledge Base.
+
+Your task is **Concepts** — identify the core domain vocabulary and abstractions in this repository WITHOUT looking at implementation code. Focus on:
+1. What problem domain does this codebase address? (e.g., "ticket management", "data pipeline orchestration")
+2. What are the key domain concepts and entities? (e.g., "Agent", "Task", "Workflow")
+3. What are the key technical abstractions? (e.g., "Conductor", "Validator", "Sidecar")
+
+## Output Format
+Produce a Markdown document following this structure exactly:
+
+# Ontology: Concepts
+
+## Domain Overview
+[2-3 sentence description of what this repository does and why it exists]
+
+## Key Domain Concepts
+[A table with: Concept | Definition | Where Introduced]
+
+## Key Technical Abstractions
+[A table with: Abstraction | Role | Source Hint]
+
+## Glossary
+[Alphabetical list of all important terms with one-line definitions]
+
+## CITE-OR-DROP RULE
+Every concept or abstraction MUST cite where it was inferred from, using [filename] notation. If you cannot point to evidence, do not include the concept.
+
+---
+
+## Inputs Provided
+
+### Repository Tree
+```
+{{ tree }}
+```
+
+### README Content
+{{ readme }}
+
+### All Top-Level Class and Function Names (Structural Only — No Bodies)
+```json
+{{ all_symbols }}
+```
