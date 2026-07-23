@@ -148,5 +148,17 @@ def run_agent(repo_root: str):
             for event in app.stream({"repo_root": repo_root, "batch_count": 0, "phase": "init"}, config, stream_mode="values"):
                 pass
             print("[Conductor] Finished all tasks.")
+            
+            # Export the agent workflow
+            try:
+                ontology_dir = os.path.join(repo_root, "docs", "ontology")
+                os.makedirs(ontology_dir, exist_ok=True)
+                workflow_path = os.path.join(ontology_dir, "agent_workflow.md")
+                mermaid_str = app.get_graph().draw_mermaid()
+                with open(workflow_path, "w", encoding="utf-8") as f:
+                    f.write(f"# Agent Workflow\n\n```mermaid\n{mermaid_str}\n```")
+                print(f"[Conductor] Exported agent workflow to {workflow_path}")
+            except Exception as e:
+                print(f"[Conductor] Could not export agent workflow diagram: {e}")
         except KeyboardInterrupt:
             print("\n[Conductor] Interrupted! State is saved. Run again to resume.")
