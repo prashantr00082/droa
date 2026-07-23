@@ -20,7 +20,7 @@ def export_to_cypher(repo_root: str):
         for f in os.listdir(modules_dir):
             if f.endswith('.json'):
                 try:
-                    with open(os.path.join(modules_dir, f), 'r') as fh:
+                    with open(os.path.join(modules_dir, f), 'r', encoding="utf-8") as fh:
                         sidecars.append(json.load(fh))
                 except Exception:
                     pass
@@ -113,7 +113,7 @@ def export_to_cypher(repo_root: str):
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "load_graph.cypher")
     
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(cypher_statements))
         
     print(f"  [Graph Exporter] Wrote {out_path}")

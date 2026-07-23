@@ -23,7 +23,7 @@ def _get_llm():
 def _load_ontology_concepts(repo_root: str) -> str:
     path = os.path.join(repo_root, "docs", "ontology", "concepts.md")
     if os.path.exists(path):
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return f.read()
     return ""
 
@@ -35,7 +35,7 @@ def _load_module_sidecars(repo_root: str) -> list:
         for f in os.listdir(modules_dir):
             if f.endswith(".json"):
                 try:
-                    with open(os.path.join(modules_dir, f), "r") as fh:
+                    with open(os.path.join(modules_dir, f), "r", encoding="utf-8") as fh:
                         sidecars.append(json.load(fh))
                 except Exception:
                     pass
@@ -70,7 +70,7 @@ def synthesize_components(repo_root: str):
     arch_dir = os.path.join(repo_root, "docs", "architecture")
     os.makedirs(arch_dir, exist_ok=True)
     out_path = os.path.join(arch_dir, "components.md")
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write(result.markdown_doc)
     print(f"  [Synthesizer] Wrote {out_path}")
 
@@ -98,7 +98,7 @@ def synthesize_models(repo_root: str):
     arch_dir = os.path.join(repo_root, "docs", "architecture")
     os.makedirs(arch_dir, exist_ok=True)
     out_path = os.path.join(arch_dir, "data-models.md")
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write(result.markdown_doc)
     print(f"  [Synthesizer] Wrote {out_path}")
 
@@ -112,7 +112,7 @@ def synthesize_lessons(repo_root: str):
         
     print("  [Synthesizer] Building architecture lessons learned...")
     memory_entries = []
-    with open(memory_path, "r") as f:
+    with open(memory_path, "r", encoding="utf-8") as f:
         for line in f:
             if line.strip():
                 try:
@@ -132,7 +132,7 @@ def synthesize_lessons(repo_root: str):
     arch_dir = os.path.join(repo_root, "docs", "architecture")
     os.makedirs(arch_dir, exist_ok=True)
     out_path = os.path.join(arch_dir, "lessons_learned.md")
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write(result.markdown_doc)
     print(f"  [Synthesizer] Wrote {out_path}")
 
@@ -149,7 +149,8 @@ def run_synthesizer(repo_root: str) -> bool:
         synthesize_models(repo_root)
         synthesize_lessons(repo_root)
     except Exception as e:
-        print(f"  [Synthesizer] Error in LLM synthesis: {e}")
+        import traceback
+        print(f"  [Synthesizer] Error in LLM synthesis: {e}\n{traceback.format_exc()}")
         
     # 2. Run Deterministic Reciprocity Check
     requires_reprocess = False
@@ -157,7 +158,8 @@ def run_synthesizer(repo_root: str) -> bool:
         from deep_rkb_agent.agents.reciprocity import run_reciprocity_check
         _, requires_reprocess = run_reciprocity_check(repo_root)
     except Exception as e:
-        print(f"  [Synthesizer] Error in reciprocity check: {e}")
+        import traceback
+        print(f"  [Synthesizer] Error in reciprocity check: {e}\n{traceback.format_exc()}")
         
     print("[Synthesizer] Complete.")
     return requires_reprocess

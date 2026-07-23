@@ -13,7 +13,7 @@ PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "prompts
 def _load_prompt(name: str) -> Template:
     """Load a jinja2 prompt template by filename."""
     path = os.path.abspath(os.path.join(PROMPTS_DIR, name))
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return Template(f.read())
 
 
@@ -108,7 +108,7 @@ def build_organization(repo_root: str) -> OntologyOrganization:
     for loc in ["CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS"]:
         p = os.path.join(repo_root, loc)
         if os.path.exists(p):
-            with open(p, "r") as f:
+            with open(p, "r", encoding="utf-8") as f:
                 codeowners_content += f"=== {loc} ===\n" + f.read() + "\n"
     if not codeowners_content:
         codeowners_content = "(No CODEOWNERS found)"
@@ -136,7 +136,7 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
     if sub_task == "ontology.concepts":
         result = build_concepts(repo_root)
         out_path = os.path.join(ontology_dir, "concepts.md")
-        with open(out_path, "w") as f:
+        with open(out_path, "w", encoding="utf-8") as f:
             f.write(result.markdown_doc)
         print(f"  [Cartographer] Wrote {out_path}")
         return result.markdown_doc
@@ -144,11 +144,11 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
     elif sub_task == "ontology.relationships":
         result = build_relationships(repo_root)
         out_path = os.path.join(ontology_dir, "relationships.md")
-        with open(out_path, "w") as f:
+        with open(out_path, "w", encoding="utf-8") as f:
             f.write(result.markdown_doc)
         # Also save machine-readable edges
         edges_path = os.path.join(ontology_dir, "dependency-graph.json")
-        with open(edges_path, "w") as f:
+        with open(edges_path, "w", encoding="utf-8") as f:
             json.dump(result.dependency_edges, f, indent=2)
         print(f"  [Cartographer] Wrote {out_path} and {edges_path}")
         return result.markdown_doc
@@ -156,7 +156,7 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
     elif sub_task == "ontology.flows":
         result = build_flows(repo_root)
         out_path = os.path.join(ontology_dir, "flows.md")
-        with open(out_path, "w") as f:
+        with open(out_path, "w", encoding="utf-8") as f:
             f.write(result.markdown_doc)
         print(f"  [Cartographer] Wrote {out_path}")
         return result.markdown_doc
@@ -164,7 +164,7 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
     elif sub_task == "ontology.organization":
         result = build_organization(repo_root)
         out_path = os.path.join(ontology_dir, "organization.md")
-        with open(out_path, "w") as f:
+        with open(out_path, "w", encoding="utf-8") as f:
             f.write(result.markdown_doc)
         print(f"  [Cartographer] Wrote {out_path}")
         return result.markdown_doc

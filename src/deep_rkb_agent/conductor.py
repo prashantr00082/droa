@@ -42,12 +42,12 @@ def _process_single_task(repo_root: str, task: dict):
             os.makedirs(docs_dir, exist_ok=True)
             
             md_path = os.path.join(repo_root, "docs", task['output'])
-            with open(md_path, "w") as f:
+            with open(md_path, "w", encoding="utf-8") as f:
                 f.write(sidecar.markdown_doc)
                 
             # Save JSON Sidecar
             json_path = md_path.replace(".md", ".json")
-            with open(json_path, "w") as f:
+            with open(json_path, "w", encoding="utf-8") as f:
                 sidecar_dict = sidecar.model_dump(exclude={"markdown_doc"})
                 import json
                 json.dump(sidecar_dict, f, indent=2)

@@ -19,7 +19,7 @@ def run_reciprocity_check(repo_root: str) -> Tuple[str, bool]:
         for f in os.listdir(modules_dir):
             if f.endswith('.json'):
                 try:
-                    with open(os.path.join(modules_dir, f), 'r') as fh:
+                    with open(os.path.join(modules_dir, f), 'r', encoding="utf-8") as fh:
                         data = json.load(fh)
                         sidecars[data.get('source', f)] = data
                 except Exception:
@@ -100,7 +100,7 @@ def run_reciprocity_check(repo_root: str) -> Tuple[str, bool]:
     os.makedirs(arch_dir, exist_ok=True)
     report_path = os.path.join(arch_dir, "reciprocity_report.md")
     
-    with open(report_path, "w") as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
         
     print(f"  [Synthesizer] Wrote {report_path}")
