@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 
 IGNORE_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".rkb", "docs", "tests", "prompts"}
 SUPPORTED_EXTS = {".py", ".java", ".go"}
+IGNORE_EXTS = {".pyc", ".tmp", ".log"}
 
 def hash_file(filepath: str) -> str:
     hasher = hashlib.sha1()
