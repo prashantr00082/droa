@@ -25,13 +25,16 @@ def export_to_cypher(repo_root: str):
                 except Exception:
                     pass
 
-    try:
-        from sentence_transformers import SentenceTransformer
-        print("  [Graph Exporter] Loading embedding model (all-MiniLM-L6-v2)...")
-        model = SentenceTransformer('all-MiniLM-L6-v2')
-    except ImportError:
-        print("  [Graph Exporter] sentence_transformers not installed. Skipping vector embeddings.")
-        model = None
+    model = None
+    if os.environ.get("ENABLE_EMBEDDINGS", "false").lower() == "true":
+        try:
+            from sentence_transformers import SentenceTransformer
+            print("  [Graph Exporter] Loading embedding model (all-MiniLM-L6-v2)...")
+            model = SentenceTransformer('all-MiniLM-L6-v2')
+        except ImportError:
+            print("  [Graph Exporter] sentence_transformers not installed. Skipping vector embeddings.")
+    else:
+        print("  [Graph Exporter] Embeddings disabled by default (ENABLE_EMBEDDINGS!=true).")
 
     cypher_statements = []
     
