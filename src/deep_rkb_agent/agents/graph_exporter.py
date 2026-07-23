@@ -7,7 +7,7 @@ def _escape_cypher(s: str) -> str:
         return ""
     return s.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
 
-def export_to_cypher(repo_root: str):
+def export_to_cypher(repo_root: str, org: str = None, subsystem: str = None, service: str = None):
     """
     Reads all JSON sidecars and generates a load_graph.cypher script
     containing MERGE statements to populate a Neo4j knowledge graph.
@@ -43,6 +43,26 @@ def export_to_cypher(repo_root: str):
     cypher_statements.append("CREATE CONSTRAINT module_path IF NOT EXISTS FOR (m:Module) REQUIRE m.path IS UNIQUE;")
     cypher_statements.append("CREATE CONSTRAINT symbol_id IF NOT EXISTS FOR (s:Symbol) REQUIRE s.id IS UNIQUE;\n")
 
+    # 1.5. Enterprise Knowledge Layer (Hierarchy)
+    cypher_statements.append("// Enterprise Knowledge Layer")
+    if org:
+        safe_org = _escape_cypher(org)
+        cypher_statements.append(f'MERGE (o:Organization {{name: "{safe_org}"}});')
+    if subsystem:
+        safe_sub = _escape_cypher(subsystem)
+        cypher_statements.append(f'MERGE (sub:Subsystem {{name: "{safe_sub}"}});')
+        if org:
+            cypher_statements.append(f'MATCH (o:Organization {{name: "{safe_org}"}}), (sub:Subsystem {{name: "{safe_sub}"}}) MERGE (o)-[:CONTAINS]->(sub);')
+    if service:
+        safe_srv = _escape_cypher(service)
+        cypher_statements.append(f'MERGE (srv:Service {{name: "{safe_srv}"}});')
+        if subsystem:
+            cypher_statements.append(f'MATCH (sub:Subsystem {{name: "{safe_sub}"}}), (srv:Service {{name: "{safe_srv}"}}) MERGE (sub)-[:CONTAINS]->(srv);')
+        elif org:
+            cypher_statements.append(f'MATCH (o:Organization {{name: "{safe_org}"}}), (srv:Service {{name: "{safe_srv}"}}) MERGE (o)-[:CONTAINS]->(srv);')
+    
+    cypher_statements.append("")
+
     # 2. Modules
     cypher_statements.append("// Modules")
     for s in sidecars:
@@ -64,6 +84,13 @@ def export_to_cypher(repo_root: str):
             f'MERGE (m:Module {{path: "{path}"}}) '
             f'SET m.name = "{module_name}", m.confidence = {confidence}{embedding_str};'
         )
+        # Link Module to Service if available
+        if service:
+            safe_service = _escape_cypher(service)
+            cypher_statements.append(
+                f'MATCH (srv:Service {{name: "{safe_service}"}}), (m:Module {{path: "{path}"}}) '
+                f'MERGE (srv)-[:CONTAINS]->(m);'
+            )
     cypher_statements.append("")
     
     # 3. Symbols and CONTAINS edges

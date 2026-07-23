@@ -19,6 +19,9 @@ class RKBState(TypedDict):
     batch_count: int
     critique: str
     review_count: int
+    org: Optional[str]
+    subsystem: Optional[str]
+    service: Optional[str]
 
 def init_node(state: RKBState) -> dict:
     print("[Conductor] Running init...")
@@ -101,7 +104,7 @@ from deep_rkb_agent.agents.graph_exporter import export_to_cypher
 def synthesize_node(state: RKBState) -> dict:
     print("[Conductor] Running synthesize...")
     requires_reprocess = run_synthesizer(state["repo_root"], critique=state.get("critique", ""))
-    export_to_cypher(state["repo_root"])
+    export_to_cypher(state["repo_root"], state.get("org"), state.get("subsystem"), state.get("service"))
     
     if requires_reprocess:
         print("[Conductor] Reciprocity mismatches found! Looping back to process node.")
@@ -159,7 +162,7 @@ def build_graph():
     
     return g
 
-def run_agent(repo_root: str):
+def run_agent(repo_root: str, org: str = None, subsystem: str = None, service: str = None):
     repo_root = os.path.abspath(repo_root)
     db_path = os.path.join(repo_root, ".rkb", "checkpoint.db")
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -172,7 +175,15 @@ def run_agent(repo_root: str):
         
         print(f"Starting agent on {repo_root}...")
         try:
-            for event in app.stream({"repo_root": repo_root, "batch_count": 0, "phase": "init"}, config, stream_mode="values"):
+            initial_state = {
+                "repo_root": repo_root,
+                "batch_count": 0,
+                "phase": "init",
+                "org": org,
+                "subsystem": subsystem,
+                "service": service
+            }
+            for event in app.stream(initial_state, config, stream_mode="values"):
                 pass
             print("[Conductor] Finished all tasks.")
             

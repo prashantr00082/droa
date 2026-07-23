@@ -8,6 +8,9 @@ def main():
     parser = argparse.ArgumentParser(description="Deep Repository Ontology Agent")
     parser.add_argument("repo_root", nargs="?", default=".", help="Path to the repository to process")
     parser.add_argument("--isolate", action="store_true", help="Run the agent in a new, isolated git branch")
+    parser.add_argument("--org", default=None, help="Organization name for Enterprise Knowledge Graph")
+    parser.add_argument("--subsystem", default=None, help="Subsystem name for Enterprise Knowledge Graph")
+    parser.add_argument("--service", default=None, help="Service name for Enterprise Knowledge Graph")
     args = parser.parse_args()
     
     if not os.path.isdir(args.repo_root):
@@ -26,14 +29,14 @@ def main():
             return
             
         print("[Git Isolation] Branch created. Starting agent...")
-        run_agent(args.repo_root)
+        run_agent(args.repo_root, org=args.org, subsystem=args.subsystem, service=args.service)
         
         print(f"[Git Isolation] Agent finished. Committing documentation to branch {branch_name}...")
         subprocess.run(["git", "add", "docs/", ".rkb/"], cwd=args.repo_root)
         subprocess.run(["git", "commit", "-m", f"DROA Automated Documentation Update"], cwd=args.repo_root)
         print(f"[Git Isolation] Success! Your main branch was unaffected. Review the docs on branch '{branch_name}'.")
     else:
-        run_agent(args.repo_root)
+        run_agent(args.repo_root, org=args.org, subsystem=args.subsystem, service=args.service)
 
 if __name__ == "__main__":
     main()
