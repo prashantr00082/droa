@@ -1,5 +1,12 @@
 You are an expert software architect building the Architecture layer for a Repository Knowledge Base.
 
+Your task is to synthesize the final architecture documentation for the "Data Models" section.
+{% if critique %}
+CRITICAL REVIEW FEEDBACK:
+You previously attempted this, but an Adversarial Reviewer rejected it with the following critique:
+"{{ critique }}"
+You MUST fix the issues mentioned in the critique in your new output.
+{% endif %}
 Your task is to consolidate all Data Models (Pydantic, SQLAlchemy, TypedDict, Interfaces) found across the codebase into a single reference guide.
 
 ## Output Format

@@ -42,7 +42,7 @@ def _load_module_sidecars(repo_root: str) -> list:
     return sidecars
 
 
-def synthesize_components(repo_root: str):
+def synthesize_components(repo_root: str, critique: str = ""):
     print("  [Synthesizer] Building architecture components...")
     ontology_concepts = _load_ontology_concepts(repo_root)
     sidecars = _load_module_sidecars(repo_root)
@@ -60,7 +60,8 @@ def synthesize_components(repo_root: str):
     template = _load_prompt("synthesizer_components.jinja2")
     prompt = template.render(
         ontology_concepts=ontology_concepts,
-        modules_json=json.dumps(module_summaries, indent=2)
+        modules_json=json.dumps(module_summaries, indent=2),
+        critique=critique
     )
     
     llm = _get_llm()
@@ -75,7 +76,7 @@ def synthesize_components(repo_root: str):
     print(f"  [Synthesizer] Wrote {out_path}")
 
 
-def synthesize_models(repo_root: str):
+def synthesize_models(repo_root: str, critique: str = ""):
     print("  [Synthesizer] Building architecture data models...")
     sidecars = _load_module_sidecars(repo_root)
     
@@ -88,7 +89,8 @@ def synthesize_models(repo_root: str):
             
     template = _load_prompt("synthesizer_models.jinja2")
     prompt = template.render(
-        symbols_json=json.dumps(all_symbols, indent=2)
+        symbols_json=json.dumps(all_symbols, indent=2),
+        critique=critique
     )
     
     llm = _get_llm()
@@ -137,7 +139,7 @@ def synthesize_lessons(repo_root: str):
     print(f"  [Synthesizer] Wrote {out_path}")
 
 
-def run_synthesizer(repo_root: str) -> bool:
+def run_synthesizer(repo_root: str, critique: str = "") -> bool:
     """
     Entry point for the synthesizer. Runs all synthesis tasks sequentially.
     Returns True if reciprocity mismatches were found and need reprocessing.
@@ -145,8 +147,8 @@ def run_synthesizer(repo_root: str) -> bool:
     print("[Synthesizer] Starting synthesis...")
     # 1. Run LLM tasks
     try:
-        synthesize_components(repo_root)
-        synthesize_models(repo_root)
+        synthesize_components(repo_root, critique)
+        synthesize_models(repo_root, critique)
         synthesize_lessons(repo_root)
     except Exception as e:
         import traceback

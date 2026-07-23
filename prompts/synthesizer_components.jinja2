@@ -1,5 +1,13 @@
 You are an expert software architect building the Architecture layer for a Repository Knowledge Base.
 
+Your task is to synthesize the final architecture documentation for the "Components" section.
+{% if critique %}
+CRITICAL REVIEW FEEDBACK:
+You previously attempted this, but an Adversarial Reviewer rejected it with the following critique:
+"{{ critique }}"
+You MUST fix the issues mentioned in the critique in your new output.
+{% endif %}
+
 Your task is to organize all individual modules into logical **Subsystems** and **Components**.
 
 ## Output Format

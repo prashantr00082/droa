@@ -15,8 +15,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class RKBState(TypedDict):
     repo_root: str
-    phase: Literal["init", "scan", "process", "synthesize", "done"]
+    phase: Literal["init", "scan", "process", "synthesize", "review", "done"]
     batch_count: int
+    critique: str
+    review_count: int
 
 def init_node(state: RKBState) -> dict:
     print("[Conductor] Running init...")
@@ -98,18 +100,36 @@ from deep_rkb_agent.agents.graph_exporter import export_to_cypher
 
 def synthesize_node(state: RKBState) -> dict:
     print("[Conductor] Running synthesize...")
-    requires_reprocess = run_synthesizer(state["repo_root"])
+    requires_reprocess = run_synthesizer(state["repo_root"], critique=state.get("critique", ""))
     export_to_cypher(state["repo_root"])
     
     if requires_reprocess:
         print("[Conductor] Reciprocity mismatches found! Looping back to process node.")
         return {"phase": "process"}
         
-    return {"phase": "done"}
+    return {"phase": "review"}
+
+def review_node(state: RKBState) -> dict:
+    print("[Conductor] Running adversarial review...")
+    from deep_rkb_agent.agents.reviewer import run_reviewer
+    result = run_reviewer(state["repo_root"])
+    
+    if result.approved:
+        return {"phase": "done", "critique": ""}
+    else:
+        review_count = state.get("review_count", 0)
+        if review_count >= 2:
+            print("[Conductor] Max review loops reached (2). Forcing done to prevent infinite loops.")
+            return {"phase": "done", "critique": ""}
+        else:
+            print("[Conductor] Reviewer found flaws. Looping back to synthesize.")
+            return {"phase": "synthesize", "critique": result.critique, "review_count": review_count + 1}
 
 def router(state: RKBState) -> str:
     if state.get("phase") == "done":
         return "done"
+    elif state.get("phase") == "review":
+        return "review"
     elif state.get("phase") == "synthesize":
         return "synthesize"
     elif state.get("phase") == "process":
@@ -123,12 +143,14 @@ def build_graph():
     g.add_node("scan", scan_node)
     g.add_node("process", process_node)
     g.add_node("synthesize", synthesize_node)
+    g.add_node("review", review_node)
     
     g.set_entry_point("init")
     g.add_edge("init", "scan")
     g.add_edge("scan", "process")
     g.add_conditional_edges("process", router, {"process": "process", "synthesize": "synthesize", "done": END})
-    g.add_edge("synthesize", END)
+    g.add_edge("synthesize", "review")
+    g.add_conditional_edges("review", router, {"synthesize": "synthesize", "done": END})
     
     return g
 

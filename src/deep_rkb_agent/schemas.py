@@ -54,3 +54,9 @@ class AgentMemoryEntry(BaseModel):
     architectural_decision: str
     rationale: str
     related_modules: List[str]
+
+# --- Reviewer Schema ---
+
+class ReviewResult(BaseModel):
+    approved: bool = Field(description="True if the documentation is flawless, False if there are hallucinations, missing citations, or logic gaps.")
+    critique: str = Field(description="If not approved, a detailed critique explaining exactly what the Synthesizer got wrong and how to fix it.")
