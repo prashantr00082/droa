@@ -118,6 +118,11 @@ def review_node(state: RKBState) -> dict:
         return {"phase": "done", "critique": ""}
     else:
         review_count = state.get("review_count", 0)
+        
+        # Continual Learning: extract and store a rule from the critique
+        from deep_rkb_agent.agents.memory_updater import extract_and_store_rule
+        extract_and_store_rule(state["repo_root"], result.critique)
+        
         if review_count >= 2:
             print("[Conductor] Max review loops reached (2). Forcing done to prevent infinite loops.")
             return {"phase": "done", "critique": ""}
