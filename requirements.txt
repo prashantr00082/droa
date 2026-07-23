@@ -1,0 +1,11 @@
+langgraph
+langgraph-checkpoint-sqlite
+langchain
+langchain-openai
+jinja2
+pydantic
+rich
+tree-sitter
+tree-sitter-python
+tree-sitter-java
+tree-sitter-go

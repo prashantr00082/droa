@@ -1,7 +1,7 @@
 import os
 import json
 from jinja2 import Template
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 from deep_rkb_agent.schemas import OntologyConcepts, OntologyRelationships, OntologyFlows, OntologyOrganization
 from deep_rkb_agent.tools.ast_parser import extract_symbols
@@ -18,7 +18,10 @@ def _load_prompt(name: str) -> Template:
 
 
 def _get_llm():
-    return ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0)
+    base_url = os.environ.get("LLM_BASE_URL_SYNTHESIS", "http://localhost:8000/v1")
+    api_key = os.environ.get("LLM_API_KEY_SYNTHESIS", "dummy")
+    model = os.environ.get("LLM_MODEL_SYNTHESIS", "gpt-4")
+    return ChatOpenAI(model=model, base_url=base_url, api_key=api_key, temperature=0)
 
 
 def _collect_all_symbols(repo_root: str) -> dict:

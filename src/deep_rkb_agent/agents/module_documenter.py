@@ -1,7 +1,6 @@
 import os
 import json
 from jinja2 import Template
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from deep_rkb_agent.schemas import ModuleSidecar
 from deep_rkb_agent.tools.ast_parser import extract_symbols
@@ -19,24 +18,28 @@ def _get_llm(ast_data: dict, file_content: str):
     total_symbols = num_classes + num_functions
     num_lines = len(file_content.splitlines())
     
-    # Configuration for local OpenAI-compatible endpoints (e.g. vLLM, Ollama, LM Studio)
-    local_base_url = os.environ.get("LOCAL_LLM_BASE_URL", "http://localhost:8000/v1")
-    local_api_key = os.environ.get("LOCAL_LLM_API_KEY", "dummy")
-    
     if total_symbols > 5 or num_lines > 200:
-        print(f"      [Router] Complex file detected ({total_symbols} symbols, {num_lines} lines). Routing to GLM 5.2.")
+        model = os.environ.get("LLM_MODEL_COMPLEX", "glm-5.2-fp8")
+        base_url = os.environ.get("LLM_BASE_URL_COMPLEX", "http://localhost:8000/v1")
+        api_key = os.environ.get("LLM_API_KEY_COMPLEX", "dummy")
+        
+        print(f"      [Router] Complex file detected ({total_symbols} symbols, {num_lines} lines). Routing to {model}.")
         return ChatOpenAI(
-            model="glm-4", # Placeholder for GLM 5.2 identifier on local server
-            base_url=local_base_url,
-            api_key=local_api_key,
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
             temperature=0
         )
     else:
-        print(f"      [Router] Simple file detected ({total_symbols} symbols, {num_lines} lines). Routing to Qwen/Gemma.")
+        model = os.environ.get("LLM_MODEL_SIMPLE", "Qwen/Qwen3-VL-235B-A22B-Instruct-FP8")
+        base_url = os.environ.get("LLM_BASE_URL_SIMPLE", "http://localhost:8000/v1")
+        api_key = os.environ.get("LLM_API_KEY_SIMPLE", "dummy")
+        
+        print(f"      [Router] Simple file detected ({total_symbols} symbols, {num_lines} lines). Routing to {model}.")
         return ChatOpenAI(
-            model="qwen-2.5", # Placeholder for Qwen/Gemma identifier on local server
-            base_url=local_base_url,
-            api_key=local_api_key,
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
             temperature=0
         )
 

@@ -8,7 +8,6 @@ dependencies = [
     "langgraph-checkpoint-sqlite",
     "langchain",
     "langchain-openai",
-    "langchain-google-genai",
     "jinja2",
     "pydantic",
     "rich",
