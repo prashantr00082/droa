@@ -63,7 +63,7 @@ def build_concepts(repo_root: str) -> OntologyConcepts:
 
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result: OntologyConcepts = robust_invoke(llm, prompt, OntologyConcepts)
+    result: OntologyConcepts = robust_invoke(llm, prompt, OntologyConcepts, repo_root)
     return result
 
 
@@ -77,7 +77,7 @@ def build_relationships(repo_root: str) -> OntologyRelationships:
 
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result: OntologyRelationships = robust_invoke(llm, prompt, OntologyRelationships)
+    result: OntologyRelationships = robust_invoke(llm, prompt, OntologyRelationships, repo_root)
     return result
 
 
@@ -95,7 +95,7 @@ def build_flows(repo_root: str) -> OntologyFlows:
 
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result: OntologyFlows = robust_invoke(llm, prompt, OntologyFlows)
+    result: OntologyFlows = robust_invoke(llm, prompt, OntologyFlows, repo_root)
     return result
 
 
@@ -121,7 +121,7 @@ def build_organization(repo_root: str) -> OntologyOrganization:
 
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result: OntologyOrganization = robust_invoke(llm, prompt, OntologyOrganization)
+    result: OntologyOrganization = robust_invoke(llm, prompt, OntologyOrganization, repo_root)
     return result
 
 

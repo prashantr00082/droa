@@ -65,7 +65,7 @@ def synthesize_components(repo_root: str):
     
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result = robust_invoke(llm, prompt, ArchitectureComponents)
+    result = robust_invoke(llm, prompt, ArchitectureComponents, repo_root)
     
     arch_dir = os.path.join(repo_root, "docs", "architecture")
     os.makedirs(arch_dir, exist_ok=True)
@@ -93,7 +93,7 @@ def synthesize_models(repo_root: str):
     
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result = robust_invoke(llm, prompt, ArchitectureDataModels)
+    result = robust_invoke(llm, prompt, ArchitectureDataModels, repo_root)
     
     arch_dir = os.path.join(repo_root, "docs", "architecture")
     os.makedirs(arch_dir, exist_ok=True)
@@ -127,7 +127,7 @@ def synthesize_lessons(repo_root: str):
     
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result = robust_invoke(llm, prompt, ArchitectureLessons)
+    result = robust_invoke(llm, prompt, ArchitectureLessons, repo_root)
     
     arch_dir = os.path.join(repo_root, "docs", "architecture")
     os.makedirs(arch_dir, exist_ok=True)

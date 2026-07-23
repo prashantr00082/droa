@@ -81,7 +81,7 @@ def _build_file_chunks(lines: List[str], filepath: str, max_lines: int = MAX_CHU
     return chunks
 
 
-def _summarize_chunk(llm, file_path: str, chunk_index: int, chunk_text: str) -> ModuleChunkSummary:
+def _summarize_chunk(llm, file_path: str, chunk_index: int, chunk_text: str, repo_root: str) -> ModuleChunkSummary:
     prompt_text = (
         "You are an expert software architect analyzing one chunk of a module source file. "
         "The chunk below is part of the file and includes line-number citations. "
@@ -99,13 +99,20 @@ def _summarize_chunk(llm, file_path: str, chunk_index: int, chunk_text: str) -> 
         f"{chunk_text}"
     )
     from deep_rkb_agent.llm_utils import robust_invoke
-    return robust_invoke(llm, prompt_text, ModuleChunkSummary)
+    return robust_invoke(llm, prompt_text, ModuleChunkSummary, repo_root)
 
 
 def _build_module_prompt(module_name: str, ast_data: dict, chunk_summaries: List[ModuleChunkSummary], file_path: str) -> str:
     chunks_json = json.dumps([chunk.model_dump() for chunk in chunk_summaries], indent=2)
+    ext = os.path.splitext(file_path)[1].lower()
+    lang_hint = ""
+    if ext == ".py":
+        lang_hint = " Focus on class inheritance, decorators, types, and pythonic idioms."
+    elif ext in [".js", ".jsx", ".ts", ".tsx"]:
+        lang_hint = " Focus on ES6 modules, async/await flows, closures, and interface types."
+
     return (
-        "You are an expert software architect documenting a module from a repository. "
+        f"You are an expert software architect documenting a module from a repository.{lang_hint} "
         "You have structured AST symbol information and chunk-level summaries of the file. "
         "Use only facts present in the AST data or the chunk summaries. Do not infer beyond the provided evidence.\n\n"
         "REQUIREMENTS:\n"
@@ -162,7 +169,7 @@ def document_module(repo_root: str, file_path: str) -> ModuleSidecar:
     chunk_summaries = []
     for idx, chunk_text in enumerate(chunk_texts, start=1):
         print(f"    -> Summarizing chunk {idx}/{len(chunk_texts)} for {file_path}...")
-        chunk_summaries.append(_summarize_chunk(llm, file_path, idx, chunk_text))
+        chunk_summaries.append(_summarize_chunk(llm, file_path, idx, chunk_text, repo_root))
     
     # 3. Build final prompt from AST and chunk summaries
     prompt_text = _build_module_prompt(
@@ -174,6 +181,6 @@ def document_module(repo_root: str, file_path: str) -> ModuleSidecar:
     
     print(f"    -> Invoking final module documentation model for {file_path}...")
     from deep_rkb_agent.llm_utils import robust_invoke
-    result: ModuleSidecar = robust_invoke(llm, prompt_text, ModuleSidecar)
+    result: ModuleSidecar = robust_invoke(llm, prompt_text, ModuleSidecar, repo_root)
     
     return result
