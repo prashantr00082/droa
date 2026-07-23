@@ -52,11 +52,20 @@ flowchart TD
     
     Reciprocity -->|"Valid Dependencies"| ArchOut["Layer 2:<br/>Architecture Docs<br/>(components.md)"]:::output
     
-    Conductor -->|"Phase 5:<br/>Export"| GraphExporter["Graph Exporter<br/>Agent"]:::agent
-    ArchOut --> GraphExporter
+    %% Phase 6: Adversarial Review & Continual Learning
+    Conductor -->|"Phase 5:<br/>Review"| Reviewer["Adversarial<br/>Reviewer"]:::agent
+    ArchOut --> Reviewer
+    Reviewer -->|"Critique<br/>(Reject)"| Synthesizer
+    Reviewer -->|"Critique<br/>(Reject)"| MemoryUpdater["Memory<br/>Updater"]:::agent
+    MemoryUpdater -->|"Push Rule"| LangSmith[("LangSmith<br/>Context Hub")]:::database
+    LangSmith -->|"Pull Rule"| Synthesizer
+    Reviewer -->|"Approved"| GraphExporter["Graph Exporter<br/>Agent"]:::agent
+    
+    %% Phase 7: Graph Export
+    Conductor -->|"Phase 6:<br/>Export"| GraphExporter
     ModOut --> GraphExporter
     
-    GraphExporter --> Neo4j[("Neo4j Cypher<br/>Script (GraphRAG)")]:::database
+    GraphExporter --> Neo4j[("Neo4j Cypher<br/>(Enterprise Graph)")]:::database
 ```
 
 ### Flow Breakdown & Technical Details
@@ -73,8 +82,11 @@ flowchart TD
    - **AST Parsing**: Tree-sitter runs locally on the machine to parse Python/Java/Go files and build a dictionary of `classes`, `functions`, and `imports`.
    - **Routing**: `module_documenter.py` evaluates the AST output. Large/complex files are routed to a more capable LLM, while simple files are routed to a faster/cheaper LLM. Both return strict `ModuleSidecar` Pydantic models via Langchain structured outputs.
    - **Validation (`validator.py`)**: A deterministic script checks the LLM's output. It verifies that citations `[file:line]` resolve to actual files and lines, and checks API coverage against the Tree-sitter skeleton.
-4. **Self-Healing Loop**:
-   - The `Reciprocity Checker` compares `ModuleSidecar` dependencies. If File A claims to depend on File B, but File B does not exist or isn't documented correctly, it alters the database row in `state.db` to set `priority = priority + 10` and `status = 'NOT_STARTED'`, forcing the Conductor to loop back to Phase 3.
+4. **Adversarial Verification & Continual Learning (Phase 5)**:
+   - **Reviewer**: Evaluates the synthesized architectural documents to catch hallucinations. If flaws are found, it rejects the document and generates a detailed critique.
+   - **Memory Updater**: Analyzes the critique to extract a generalized rule and pushes it to **LangSmith Context Hub**. This updates the permanent agent prompt for all future runs, creating a self-improving system.
+5. **Enterprise Knowledge Layer (Phase 6)**:
+   - `graph_exporter.py` takes CLI flags (`--org`, `--subsystem`, `--service`) and structures the extracted repository into a unified Neo4j hierarchical graph, linking modules directly to organizational services.
 
 ---
 

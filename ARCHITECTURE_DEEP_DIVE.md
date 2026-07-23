@@ -52,13 +52,19 @@ graph TD
         H -->|Passes| I[docs/modules/*.json]
     end
     
-    subgraph "Phase 5 & 6: Synthesis & GraphRAG"
+    subgraph "Phase 5 & 6: Synthesis, Review & Learning"
         I --> J(Synthesizer)
-        J --> K{Reciprocity Checker}
-        K -->|Mismatches Found| C
-        K -->|Valid| L[docs/architecture/*.md]
-        L --> M(Graph Exporter)
-        M -->|Sentence-Transformers| N[Neo4j Cypher Script]
+        J --> K{Adversarial Reviewer}
+        K -->|Hallucination Found| L1(Memory Updater)
+        L1 -->|Pushes Rule| L2[(LangSmith Context Hub)]
+        L2 -.->|Pulls Rule| J
+        K -->|Critique Rejected| J
+        
+        K -->|Approved| M(Graph Exporter)
+    end
+    
+    subgraph "Phase 7: Enterprise Knowledge Layer"
+        M -->|Hierarchical Cypher| N[(Neo4j: Org -> Subsystem -> Service -> Code)]
     end
 ```
 
@@ -92,16 +98,18 @@ DROA is completely **Language Agnostic**. It uses **Tree-sitter**, the exact sam
 To ensure absolute trust, DROA enforces the **Cite-or-Drop Rule**.
 * **Example**: If the LLM generates documentation saying, *"The AuthManager connects to Redis for caching,"* but the AST parser did *not* find a Redis import or a caching function, the **Validator** catches the hallucination, rejects the JSON sidecar, and re-queues the task in SQLite to be tried again.
 
-### Phase 5: Auto-Healing & Reciprocity Checking
-When documenting massive codebases, dependency claims drift. 
-* **The Problem**: Module A claims it depends on Module B. But Module B doesn't acknowledge that Module A uses it. 
-* **The Solution**: The deterministic `Reciprocity Checker` scans all JSON sidecars. If it finds a mismatch, it **automatically inserts a high-priority task back into the SQLite DB** telling the LLM: *"Fix this mismatch."* The LangGraph router loops back to the processing phase, making the knowledge base **Self-Healing**.
+### Phase 5: Auto-Healing, Adversarial Verification, & Continual Learning
+When documenting massive codebases, dependency claims drift and LLMs hallucinate. 
+* **Reciprocity Checking**: Module A claims it depends on Module B. But Module B doesn't acknowledge that Module A uses it. The deterministic `Reciprocity Checker` automatically loops back to the processing phase.
+* **Adversarial Reviewer**: Once the Synthesizer generates the final architectural blueprints, a `Reviewer` agent attacks the document. If it finds unsupported claims, it generates a critique and rejects the document.
+* **Continual Learning**: We don't just fix the mistake for one run. The `Memory Updater` agent reads the critique, extracts a general rule, and pushes it to **LangSmith Context Hub**. Every agent in DROA instantly pulls this rule on future runs, meaning the agent gets permanently smarter over time.
 
-### Phase 6: GraphRAG & Vector Embeddings
-Finally, DROA packages the entire Knowledge Base for downstream AI Agents.
-* **Graph Structure**: It converts the JSON sidecars into a `load_graph.cypher` script, mapping `(:Module)-[:CONTAINS]->(:Symbol)` and `(:Symbol)-[:DEPENDS_ON]->(:Module)`.
-* **Hybrid Search (Vector Embeddings)**: It uses local `sentence-transformers` (e.g., `all-MiniLM-L6-v2`) to calculate dense vectors for the module summaries, injecting them directly into the Neo4j nodes.
-* **Result**: Downstream agents can run Cypher queries to traverse the graph structurally (e.g., "Find all functions that depend on the Database module") AND semantically (e.g., "...and relate to 'password hashing'").
+### Phase 6: The Enterprise Knowledge Layer (GraphRAG)
+Finally, DROA packages the entire Knowledge Base for downstream AI Agents (like your CRM agent).
+* **Enterprise Context**: By passing `--org`, `--subsystem`, and `--service` CLI flags, DROA embeds the repository into the wider business context.
+* **Hierarchical Graph Structure**: It converts the data into a `load_graph.cypher` script, mapping `(:Organization)-[:CONTAINS]->(:Subsystem)-[:CONTAINS]->(:Service)-[:CONTAINS]->(:Module)-[:CONTAINS]->(:Symbol)`.
+* **Hybrid Search**: It uses local `sentence-transformers` (e.g., `all-MiniLM-L6-v2`) to inject dense semantic vectors into the Neo4j nodes.
+* **Result**: Downstream CRM agents can run Cypher queries to traverse the graph starting from the enterprise business unit all the way down to a specific line of code that threw an error.
 
 ---
 
