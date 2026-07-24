@@ -102,7 +102,7 @@ def _build_module_prompt(module_name: str, ast_data: dict, chunk_summaries: List
         "REQUIREMENTS:\n"
         "1. Populate the ModuleSidecar schema exactly.\n"
         "2. In markdown_doc, follow this Markdown template exactly:\n"
-        "   # Module: {module_name}\n"
+        f"   # Module: {module_name}\n"
         "   ## Purpose\n"
         "   [Describe high-level purpose]\n\n"
         "   ## Responsibilities\n"
@@ -119,7 +119,7 @@ def _build_module_prompt(module_name: str, ast_data: dict, chunk_summaries: List
         f"{json.dumps(ast_data, indent=2)}\n\n"
         "Chunk Summaries:\n"
         f"{chunks_json}\n"
-    ).format(module_name=module_name)
+    )
 
 
 def _merge_sidecar_fields(primary: ModuleSidecar, secondary: ModuleSidecar) -> ModuleSidecar:
