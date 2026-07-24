@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('Synthesizer')
 import os
 import json
 from jinja2 import Template
@@ -41,7 +43,7 @@ def _load_module_sidecars(repo_root: str) -> list:
 
 
 def synthesize_components(repo_root: str, critique: str = ""):
-    print("  [Synthesizer] Building architecture components...")
+    logger.info("  [Synthesizer] Building architecture components...")
     ontology_concepts = _load_ontology_concepts(repo_root)
     sidecars = _load_module_sidecars(repo_root)
     
@@ -71,11 +73,11 @@ def synthesize_components(repo_root: str, critique: str = ""):
     out_path = os.path.join(arch_dir, "components.md")
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(result.markdown_doc)
-    print(f"  [Synthesizer] Wrote {out_path}")
+    logger.info(f"  [Synthesizer] Wrote {out_path}")
 
 
 def synthesize_models(repo_root: str, critique: str = ""):
-    print("  [Synthesizer] Building architecture data models...")
+    logger.info("  [Synthesizer] Building architecture data models...")
     sidecars = _load_module_sidecars(repo_root)
     
     all_symbols = []
@@ -100,7 +102,7 @@ def synthesize_models(repo_root: str, critique: str = ""):
     out_path = os.path.join(arch_dir, "data-models.md")
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(result.markdown_doc)
-    print(f"  [Synthesizer] Wrote {out_path}")
+    logger.info(f"  [Synthesizer] Wrote {out_path}")
 
 
 def synthesize_lessons(repo_root: str):
@@ -110,7 +112,7 @@ def synthesize_lessons(repo_root: str):
     if not os.path.exists(memory_path) or os.path.getsize(memory_path) == 0:
         return
         
-    print("  [Synthesizer] Building architecture lessons learned...")
+    logger.info("  [Synthesizer] Building architecture lessons learned...")
     memory_entries = []
     with open(memory_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -134,7 +136,7 @@ def synthesize_lessons(repo_root: str):
     out_path = os.path.join(arch_dir, "lessons_learned.md")
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(result.markdown_doc)
-    print(f"  [Synthesizer] Wrote {out_path}")
+    logger.info(f"  [Synthesizer] Wrote {out_path}")
 
 
 def run_synthesizer(repo_root: str, critique: str = "") -> bool:
@@ -142,7 +144,7 @@ def run_synthesizer(repo_root: str, critique: str = "") -> bool:
     Entry point for the synthesizer. Runs all synthesis tasks sequentially.
     Returns True if reciprocity mismatches were found and need reprocessing.
     """
-    print("[Synthesizer] Starting synthesis...")
+    logger.info("[Synthesizer] Starting synthesis...")
     # 1. Run LLM tasks
     try:
         synthesize_components(repo_root, critique)
@@ -150,7 +152,7 @@ def run_synthesizer(repo_root: str, critique: str = "") -> bool:
         synthesize_lessons(repo_root)
     except Exception as e:
         import traceback
-        print(f"  [Synthesizer] Error in LLM synthesis: {e}\n{traceback.format_exc()}")
+        logger.error(f"  [Synthesizer] Error in LLM synthesis: {e}\n{traceback.format_exc()}")
         
     # 2. Run Deterministic Reciprocity Check
     requires_reprocess = False
@@ -159,7 +161,7 @@ def run_synthesizer(repo_root: str, critique: str = "") -> bool:
         _, requires_reprocess = run_reciprocity_check(repo_root)
     except Exception as e:
         import traceback
-        print(f"  [Synthesizer] Error in reciprocity check: {e}\n{traceback.format_exc()}")
+        logger.error(f"  [Synthesizer] Error in reciprocity check: {e}\n{traceback.format_exc()}")
         
-    print("[Synthesizer] Complete.")
+    logger.info("[Synthesizer] Complete.")
     return requires_reprocess

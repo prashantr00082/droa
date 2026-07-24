@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('GraphExporter')
 import os
 import json
 
@@ -7,12 +9,12 @@ def _escape_cypher(s: str) -> str:
         return ""
     return s.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
 
-def export_to_cypher(repo_root: str, org: str = None, subsystem: str = None, service: str = None):
+def export_to_cypher(repo_root: str, org: str | None = None, subsystem: str | None = None, service: str | None = None):
     """
     Reads all JSON sidecars and generates a load_graph.cypher script
     containing MERGE statements to populate a Neo4j knowledge graph.
     """
-    print("  [Graph Exporter] Generating Neo4j Cypher script...")
+    logger.info("  [Graph Exporter] Generating Neo4j Cypher script...")
     modules_dir = os.path.join(repo_root, "docs", "modules")
     
     sidecars = []
@@ -29,12 +31,12 @@ def export_to_cypher(repo_root: str, org: str = None, subsystem: str = None, ser
     if os.environ.get("ENABLE_EMBEDDINGS", "false").lower() == "true":
         try:
             from sentence_transformers import SentenceTransformer
-            print("  [Graph Exporter] Loading embedding model (all-MiniLM-L6-v2)...")
+            logger.info("  [Graph Exporter] Loading embedding model (all-MiniLM-L6-v2)...")
             model = SentenceTransformer('all-MiniLM-L6-v2')
         except ImportError:
-            print("  [Graph Exporter] sentence_transformers not installed. Skipping vector embeddings.")
+            logger.info("  [Graph Exporter] sentence_transformers not installed. Skipping vector embeddings.")
     else:
-        print("  [Graph Exporter] Embeddings disabled by default (ENABLE_EMBEDDINGS!=true).")
+        logger.info("  [Graph Exporter] Embeddings disabled by default (ENABLE_EMBEDDINGS!=true).")
 
     cypher_statements = []
     
@@ -143,4 +145,4 @@ def export_to_cypher(repo_root: str, org: str = None, subsystem: str = None, ser
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(cypher_statements))
         
-    print(f"  [Graph Exporter] Wrote {out_path}")
+    logger.info(f"  [Graph Exporter] Wrote {out_path}")

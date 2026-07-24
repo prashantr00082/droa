@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('Reciprocity')
 import os
 import json
 from typing import Dict, List, Tuple
@@ -10,7 +12,7 @@ def run_reciprocity_check(repo_root: str) -> Tuple[str, bool]:
     Generates docs/architecture/reciprocity_report.md and inserts tasks to auto-resolve mismatches.
     Returns (report_path, requires_reprocess).
     """
-    print("  [Synthesizer] Running Reciprocity Check...")
+    logger.info("  [Synthesizer] Running Reciprocity Check...")
     modules_dir = os.path.join(repo_root, "docs", "modules")
     
     # Load all module sidecars
@@ -93,7 +95,7 @@ def run_reciprocity_check(repo_root: str) -> Tuple[str, bool]:
             })
             
     if new_tasks:
-        print(f"  [Synthesizer] Found {len(missing_acknowledgments)} mismatches. Auto-queueing {len(new_tasks)} resolution tasks.")
+        logger.info(f"  [Synthesizer] Found {len(missing_acknowledgments)} mismatches. Auto-queueing {len(new_tasks)} resolution tasks.")
         add_tasks(repo_root, new_tasks)
             
     arch_dir = os.path.join(repo_root, "docs", "architecture")
@@ -103,5 +105,5 @@ def run_reciprocity_check(repo_root: str) -> Tuple[str, bool]:
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
         
-    print(f"  [Synthesizer] Wrote {report_path}")
+    logger.info(f"  [Synthesizer] Wrote {report_path}")
     return report_path, len(missing_acknowledgments) > 0

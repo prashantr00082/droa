@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('LLMUtils')
 import re
 from pydantic import BaseModel
 from langchain_core.output_parsers import PydanticOutputParser
@@ -95,8 +97,8 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, ag
             structured_llm = llm.with_structured_output(schema_class)
             return structured_llm.invoke(prompt_text)
         except Exception as native_e:
-            print(f"      [Robust Parser] Native structured output failed: {native_e}")
-            print("      [Robust Parser] Falling back to manual JSON extraction...")
+            logger.error(f"      [Robust Parser] Native structured output failed: {native_e}")
+            logger.info("      [Robust Parser] Falling back to manual JSON extraction...")
             
     # Manual JSON extraction path
     parser = PydanticOutputParser(pydantic_object=schema_class)
@@ -128,6 +130,6 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, ag
         return schema_class.model_validate_json(text)
     except Exception as e:
         # If it still fails, print the raw output so the user can debug what the LLM did
-        print(f"      [Robust Parser] FATAL: Failed to parse JSON even after fallback.")
-        print(f"      [Robust Parser] Raw LLM Output:\n{text}")
+        logger.error(f"      [Robust Parser] FATAL: Failed to parse JSON even after fallback.")
+        logger.info(f"      [Robust Parser] Raw LLM Output:\n{text}")
         raise e

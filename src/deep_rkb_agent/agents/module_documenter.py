@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('ModuleDocumenter')
 import os
 import json
 from typing import List
@@ -34,10 +36,10 @@ def _get_llm(ast_data: dict, total_lines: int):
     num_lines = total_lines
     
     if total_symbols > 5 or num_lines > 200:
-        print(f"      [Router] Complex file detected ({total_symbols} symbols, {num_lines} lines). Routing to Complex Model.")
+        logger.info(f"      [Router] Complex file detected ({total_symbols} symbols, {num_lines} lines). Routing to Complex Model.")
         return get_llm("complex")
     else:
-        print(f"      [Router] Simple file detected ({total_symbols} symbols, {num_lines} lines). Routing to Simple Model.")
+        logger.info(f"      [Router] Simple file detected ({total_symbols} symbols, {num_lines} lines). Routing to Simple Model.")
         return get_llm("simple")
 
 
@@ -152,7 +154,7 @@ def document_module(repo_root: str, file_path: str) -> ModuleSidecar:
     llm = _get_llm(ast_data, len(lines))
     chunk_summaries = []
     for idx, chunk_text in enumerate(chunk_texts, start=1):
-        print(f"    -> Summarizing chunk {idx}/{len(chunk_texts)} for {file_path}...")
+        logger.info(f"    -> Summarizing chunk {idx}/{len(chunk_texts)} for {file_path}...")
         chunk_summaries.append(_summarize_chunk(llm, file_path, idx, chunk_text, repo_root))
     
     # 3. Build final prompt from AST and chunk summaries
@@ -163,7 +165,7 @@ def document_module(repo_root: str, file_path: str) -> ModuleSidecar:
         file_path=file_path
     )
     
-    print(f"    -> Invoking final module documentation model for {file_path}...")
+    logger.info(f"    -> Invoking final module documentation model for {file_path}...")
     from deep_rkb_agent.llm_utils import robust_invoke
     result: ModuleSidecar = robust_invoke(llm, prompt_text, ModuleSidecar, repo_root, agent_name="ModuleDocumenter")
     

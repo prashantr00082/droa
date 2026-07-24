@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('Conductor')
 import os
 import sqlite3
 import time
@@ -24,19 +26,19 @@ class RKBState(TypedDict):
     service: Optional[str]
 
 def init_node(state: RKBState) -> dict:
-    print("[Conductor] Running init...")
+    logger.info("[Conductor] Running init...")
     init_db(state["repo_root"])
     return {"phase": "scan"}
 
 def scan_node(state: RKBState) -> dict:
-    print("[Conductor] Running scan...")
+    logger.info("[Conductor] Running scan...")
     tasks = scan_repository(state["repo_root"])
     add_tasks(state["repo_root"], tasks)
     export_progress(state["repo_root"])
     return {"phase": "process"}
 
 def _process_single_task(repo_root: str, task: dict):
-    print(f"[Conductor] Claimed task {task['id']}: {task['source']} ({task['category']})")
+    logger.info(f"[Conductor] Claimed task {task['id']}: {task['source']} ({task['category']})")
     
     if task['category'] == 'module':
         try:
@@ -61,15 +63,15 @@ def _process_single_task(repo_root: str, task: dict):
             confidence = validate_module(repo_root, task['source'], sidecar.markdown_doc, sidecar)
             
             if confidence < 0.75 and task['priority'] < 60:
-                print(f"    -> Low confidence ({confidence:.2f}). Re-queuing task {task['id']}...")
+                logger.info(f"    -> Low confidence ({confidence:.2f}). Re-queuing task {task['id']}...")
                 requeue_task(repo_root, task['id'])
             else:
                 if confidence < 0.75:
-                    print(f"    -> Low confidence ({confidence:.2f}), but max retries reached. Marking complete.")
+                    logger.info(f"    -> Low confidence ({confidence:.2f}), but max retries reached. Marking complete.")
                 mark_task_complete(repo_root, task['id'], confidence=confidence)
                 
         except Exception as e:
-            print(f"    -> Error processing {task['source']}: {e}")
+            logger.error(f"    -> Error processing {task['source']}: {e}")
             mark_task_complete(repo_root, task['id'], confidence=0.0)
             
     elif task['category'].startswith('ontology.'):
@@ -77,10 +79,10 @@ def _process_single_task(repo_root: str, task: dict):
             run_cartographer(repo_root, task['category'])
             mark_task_complete(repo_root, task['id'], confidence=1.0)
         except Exception as e:
-            print(f"    -> Error in Cartographer for {task['category']}: {e}")
+            logger.error(f"    -> Error in Cartographer for {task['category']}: {e}")
             mark_task_complete(repo_root, task['id'], confidence=0.0)
     else:
-        print(f"    -> Unknown category '{task['category']}', skipping.")
+        logger.info(f"    -> Unknown category '{task['category']}', skipping.")
         mark_task_complete(repo_root, task['id'], confidence=0.5)
 
 def process_node(state: RKBState) -> dict:
@@ -89,14 +91,14 @@ def process_node(state: RKBState) -> dict:
     if not tasks:
         return {"phase": "synthesize"}
         
-    print(f"[Conductor] Processing batch of {len(tasks)} tasks concurrently...")
+    logger.info(f"[Conductor] Processing batch of {len(tasks)} tasks concurrently...")
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = [executor.submit(_process_single_task, state["repo_root"], task) for task in tasks]
         for future in as_completed(futures):
             try:
                 future.result() # Will raise any unhandled exceptions
             except Exception as e:
-                print(f"[Conductor] CRITICAL ERROR: Unhandled exception in task executor: {e}")
+                logger.error(f"[Conductor] CRITICAL ERROR: Unhandled exception in task executor: {e}")
             
     export_progress(state["repo_root"])
     
@@ -105,18 +107,18 @@ def process_node(state: RKBState) -> dict:
 from deep_rkb_agent.agents.graph_exporter import export_to_cypher
 
 def synthesize_node(state: RKBState) -> dict:
-    print("[Conductor] Running synthesize...")
+    logger.info("[Conductor] Running synthesize...")
     requires_reprocess = run_synthesizer(state["repo_root"], critique=state.get("critique", ""))
     export_to_cypher(state["repo_root"], state.get("org"), state.get("subsystem"), state.get("service"))
     
     if requires_reprocess:
-        print("[Conductor] Reciprocity mismatches found! Looping back to process node.")
+        logger.info("[Conductor] Reciprocity mismatches found! Looping back to process node.")
         return {"phase": "process"}
         
     return {"phase": "review"}
 
 def review_node(state: RKBState) -> dict:
-    print("[Conductor] Running adversarial review...")
+    logger.info("[Conductor] Running adversarial review...")
     from deep_rkb_agent.agents.reviewer import run_reviewer
     result = run_reviewer(state["repo_root"])
     
@@ -130,10 +132,10 @@ def review_node(state: RKBState) -> dict:
         extract_and_store_rule(state["repo_root"], result.critique)
         
         if review_count >= 2:
-            print("[Conductor] Max review loops reached (2). Forcing done to prevent infinite loops.")
+            logger.info("[Conductor] Max review loops reached (2). Forcing done to prevent infinite loops.")
             return {"phase": "done", "critique": ""}
         else:
-            print("[Conductor] Reviewer found flaws. Looping back to synthesize.")
+            logger.info("[Conductor] Reviewer found flaws. Looping back to synthesize.")
             return {"phase": "synthesize", "critique": result.critique, "review_count": review_count + 1}
 
 def router(state: RKBState) -> str:
@@ -176,7 +178,7 @@ def run_agent(repo_root: str, org: str = None, subsystem: str = None, service: s
         
         config = {"configurable": {"thread_id": "main_run"}}
         
-        print(f"Starting agent on {repo_root}...")
+        logger.info(f"Starting agent on {repo_root}...")
         try:
             initial_state = {
                 "repo_root": repo_root,
@@ -188,7 +190,7 @@ def run_agent(repo_root: str, org: str = None, subsystem: str = None, service: s
             }
             for event in app.stream(initial_state, config, stream_mode="values"):
                 pass
-            print("[Conductor] Finished all tasks.")
+            logger.info("[Conductor] Finished all tasks.")
             
             # Export the agent workflow
             try:
@@ -198,8 +200,8 @@ def run_agent(repo_root: str, org: str = None, subsystem: str = None, service: s
                 mermaid_str = app.get_graph().draw_mermaid()
                 with open(workflow_path, "w", encoding="utf-8") as f:
                     f.write(f"# Agent Workflow\n\n```mermaid\n{mermaid_str}\n```")
-                print(f"[Conductor] Exported agent workflow to {workflow_path}")
+                logger.info(f"[Conductor] Exported agent workflow to {workflow_path}")
             except Exception as e:
-                print(f"[Conductor] Could not export agent workflow diagram: {e}")
+                logger.info(f"[Conductor] Could not export agent workflow diagram: {e}")
         except KeyboardInterrupt:
-            print("\n[Conductor] Interrupted! State is saved. Run again to resume.")
+            logger.info("\n[Conductor] Interrupted! State is saved. Run again to resume.")

@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('Reviewer')
 import os
 from jinja2 import Template
 
@@ -15,7 +17,7 @@ def _get_llm():
     return get_llm("complex")
 
 def run_reviewer(repo_root: str) -> ReviewResult:
-    print("  [Reviewer] Starting Adversarial Verification...")
+    logger.info("  [Reviewer] Starting Adversarial Verification...")
     
     # Read generated outputs
     arch_dir = os.path.join(repo_root, "docs", "architecture")
@@ -43,8 +45,8 @@ def run_reviewer(repo_root: str) -> ReviewResult:
     result: ReviewResult = robust_invoke(llm, prompt, ReviewResult, repo_root, agent_name="Reviewer")
     
     if not result.approved:
-        print(f"  [Reviewer] Found flaws! Critique: {result.critique[:100]}...")
+        logger.info(f"  [Reviewer] Found flaws! Critique: {result.critique[:100]}...")
     else:
-        print(f"  [Reviewer] Architecture documentation approved!")
+        logger.info(f"  [Reviewer] Architecture documentation approved!")
         
     return result

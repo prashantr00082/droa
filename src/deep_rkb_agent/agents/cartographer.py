@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('Cartographer')
 import os
 import json
 from jinja2 import Template
@@ -47,7 +49,7 @@ def _collect_all_symbols(repo_root: str) -> dict:
 
 def build_concepts(repo_root: str) -> OntologyConcepts:
     """Sub-task: document domain vocabulary and key abstractions."""
-    print("  [Cartographer] Building concepts...")
+    logger.info("  [Cartographer] Building concepts...")
     tree = build_tree_summary(repo_root)
     readme = find_readmes(repo_root)
     all_symbols = _collect_all_symbols(repo_root)
@@ -67,7 +69,7 @@ def build_concepts(repo_root: str) -> OntologyConcepts:
 
 def build_relationships(repo_root: str) -> OntologyRelationships:
     """Sub-task: map module dependencies from the import graph."""
-    print("  [Cartographer] Building relationships...")
+    logger.info("  [Cartographer] Building relationships...")
     import_graph = build_import_graph(repo_root)
 
     template = _load_prompt("cartographer_relationships.jinja2")
@@ -81,7 +83,7 @@ def build_relationships(repo_root: str) -> OntologyRelationships:
 
 def build_flows(repo_root: str) -> OntologyFlows:
     """Sub-task: infer request/data flows from entrypoints and imports."""
-    print("  [Cartographer] Building flows...")
+    logger.info("  [Cartographer] Building flows...")
     entrypoints = find_entrypoints(repo_root)
     import_graph = build_import_graph(repo_root)
 
@@ -99,7 +101,7 @@ def build_flows(repo_root: str) -> OntologyFlows:
 
 def build_organization(repo_root: str) -> OntologyOrganization:
     """Sub-task: map organization structure and ownership from CODEOWNERS."""
-    print("  [Cartographer] Building organization ontology...")
+    logger.info("  [Cartographer] Building organization ontology...")
     tree = build_tree_summary(repo_root)
     
     codeowners_content = ""
@@ -136,7 +138,7 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
         out_path = os.path.join(ontology_dir, "concepts.md")
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(result.markdown_doc)
-        print(f"  [Cartographer] Wrote {out_path}")
+        logger.info(f"  [Cartographer] Wrote {out_path}")
         return result.markdown_doc
 
     elif sub_task == "ontology.relationships":
@@ -148,7 +150,7 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
         edges_path = os.path.join(ontology_dir, "dependency-graph.json")
         with open(edges_path, "w", encoding="utf-8") as f:
             json.dump(result.dependency_edges, f, indent=2)
-        print(f"  [Cartographer] Wrote {out_path} and {edges_path}")
+        logger.info(f"  [Cartographer] Wrote {out_path} and {edges_path}")
         return result.markdown_doc
 
     elif sub_task == "ontology.flows":
@@ -156,7 +158,7 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
         out_path = os.path.join(ontology_dir, "flows.md")
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(result.markdown_doc)
-        print(f"  [Cartographer] Wrote {out_path}")
+        logger.info(f"  [Cartographer] Wrote {out_path}")
         return result.markdown_doc
 
     elif sub_task == "ontology.organization":
@@ -164,7 +166,7 @@ def run_cartographer(repo_root: str, sub_task: str) -> str:
         out_path = os.path.join(ontology_dir, "organization.md")
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(result.markdown_doc)
-        print(f"  [Cartographer] Wrote {out_path}")
+        logger.info(f"  [Cartographer] Wrote {out_path}")
         return result.markdown_doc
 
     else:

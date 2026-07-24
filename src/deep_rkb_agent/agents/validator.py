@@ -1,3 +1,5 @@
+from deep_rkb_agent.logger import get_logger
+logger = get_logger('Validator')
 import re
 import os
 from typing import Dict, Any, List
@@ -73,6 +75,6 @@ def validate_module(repo_root: str, file_path: str, markdown_doc: str, sidecar: 
     # 4. Final Confidence Formula
     confidence = (0.5 * citation_score) + (0.3 * api_coverage_score) + (0.2 * template_score)
     
-    print(f"    -> Validation for {file_path}: Template={template_score:.2f}, Citations={citation_score:.2f} ({valid_citations}/{total_citations}), API={api_coverage_score:.2f} => Confidence: {confidence:.2f}")
+    logger.info(f"    -> Validation for {file_path}: Template={template_score:.2f}, Citations={citation_score:.2f} ({valid_citations}/{total_citations}), API={api_coverage_score:.2f} => Confidence: {confidence:.2f}")
     
     return min(1.0, max(0.0, confidence))

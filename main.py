@@ -8,7 +8,7 @@ def main():
     parser = argparse.ArgumentParser(description="Deep Repository Ontology Agent")
     parser.add_argument("repo_root", nargs="?", default=".", help="Path to the repository to process")
     parser.add_argument("--isolate", action="store_true", help="Run the agent in a new, isolated git branch")
-    parser.add_argument("--org", default=None, help="Organization name for Enterprise Knowledge Graph")
+    parser.add_argument("--org", default="UIDAI", help="Organization name for Enterprise Knowledge Graph")
     parser.add_argument("--subsystem", default=None, help="Subsystem name for Enterprise Knowledge Graph")
     parser.add_argument("--service", default=None, help="Service name for Enterprise Knowledge Graph")
     args = parser.parse_args()
@@ -16,6 +16,9 @@ def main():
     if not os.path.isdir(args.repo_root):
         print(f"Error: {args.repo_root} is not a directory.")
         return
+        
+    if args.service is None:
+        args.service = os.path.basename(os.path.abspath(args.repo_root))
         
     if args.isolate:
         import subprocess
