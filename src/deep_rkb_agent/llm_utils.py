@@ -54,7 +54,7 @@ def get_llm(tier: str = "complex"):
             base_url=base_url,
             api_key=api_key,
             temperature=0,
-            max_tokens=int(os.environ.get("LLM_MAX_TOKENS", 8192))
+            max_tokens=int(os.environ.get("LLM_MAX_TOKENS", 16384))
         )
 
 
