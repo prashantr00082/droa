@@ -123,11 +123,13 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, ag
         
     if not text:
         logger.error(f"      [Robust Parser] FATAL: LLM returned an empty response.")
+        logger.info(f"      [Robust Parser Debug] RAW RESPONSE WAS: {repr(response.content)}")
         raise ValueError("LLM returned an empty response.")
         
     try:
         return schema_class.model_validate_json(text)
     except Exception as e:
         logger.error(f"      [Robust Parser] FATAL: Failed to parse JSON even after fallback.")
-        logger.info(f"      [Robust Parser] Raw LLM Output:\n{text}")
+        logger.info(f"      [Robust Parser Debug] RAW LLM RESPONSE (Length {len(response.content)}):\n--- START ---\n{response.content}\n--- END ---")
+        logger.info(f"      [Robust Parser Debug] EXTRACTED TEXT (Length {len(text)}):\n--- START ---\n{text}\n--- END ---")
         raise e
