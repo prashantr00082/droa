@@ -215,3 +215,12 @@ def run_agent(repo_root: str, org: str = None, subsystem: str = None, service: s
                 logger.info(f"[Conductor] Could not export agent workflow diagram: {e}")
         except KeyboardInterrupt:
             logger.info("\n[Conductor] Interrupted! State is saved. Run again to resume.")
+
+
+if __name__ == "__main__":
+    g = build_graph()
+    compiled_graph = g.compile()
+    
+    with open("agent_workflow_test.png", "wb") as f:
+        f.write(compiled_graph.draw_mermaid_png())
+    
