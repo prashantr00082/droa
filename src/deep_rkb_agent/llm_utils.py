@@ -115,10 +115,11 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None):
         response = llm.invoke(full_prompt)
         text = response.content.strip()
         
-        # Attempt to extract JSON from markdown code blocks if present
-        match = re.search(r'```(?:json)?(.*?)```', text, re.DOTALL | re.IGNORECASE)
-        if match:
-            text = match.group(1).strip()
+        # Attempt to extract JSON from markdown code blocks or raw text by finding outermost brackets
+        start = text.find('{')
+        end = text.rfind('}')
+        if start != -1 and end != -1:
+            text = text[start:end+1]
             
         try:
             return schema_class.model_validate_json(text)
