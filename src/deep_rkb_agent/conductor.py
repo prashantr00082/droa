@@ -93,7 +93,10 @@ def process_node(state: RKBState) -> dict:
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = [executor.submit(_process_single_task, state["repo_root"], task) for task in tasks]
         for future in as_completed(futures):
-            future.result() # Will raise any unhandled exceptions
+            try:
+                future.result() # Will raise any unhandled exceptions
+            except Exception as e:
+                print(f"[Conductor] CRITICAL ERROR: Unhandled exception in task executor: {e}")
             
     export_progress(state["repo_root"])
     

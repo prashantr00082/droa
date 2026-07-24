@@ -25,7 +25,7 @@ def extract_and_store_rule(repo_root: str, critique: str):
     
     try:
         result: RuleExtraction = robust_invoke(llm, prompt, RuleExtraction, repo_root)
-        new_rule = result.rule
+        new_rule = result.rule.replace('\n', ' ').strip()
         target = result.agent_target
         print(f"  [Memory Updater] Extracted Rule for [{target}]: {new_rule}")
         

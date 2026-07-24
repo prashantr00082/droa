@@ -46,6 +46,9 @@ def get_llm(tier: str = "complex"):
             base_url = os.environ.get("LLM_BASE_URL_SIMPLE", "http://localhost:8000/v1")
             api_key = os.environ.get("LLM_API_KEY_SIMPLE", "dummy")
             
+        if not api_key:
+            raise RuntimeError("LLM API key is missing. Please set the appropriate environment variable.")
+            
         return ChatOpenAI(
             model=model,
             base_url=base_url,
@@ -108,11 +111,17 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, ag
     response = llm.invoke(full_prompt)
     text = response.content.strip()
     
-    # Attempt to extract JSON from markdown code blocks or raw text by finding outermost brackets
-    start = text.find('{')
-    end = text.rfind('}')
-    if start != -1 and end != -1:
-        text = text[start:end+1]
+    # Attempt to extract JSON from markdown code blocks or raw text
+    import re
+    match = re.search(r'```(?:json)?\n?(.*?)\n?```', text, re.DOTALL | re.IGNORECASE)
+    if match:
+        text = match.group(1).strip()
+    else:
+        # Fallback to finding outermost brackets
+        start = text.find('{')
+        end = text.rfind('}')
+        if start != -1 and end != -1:
+            text = text[start:end+1]
         
     try:
         return schema_class.model_validate_json(text)
