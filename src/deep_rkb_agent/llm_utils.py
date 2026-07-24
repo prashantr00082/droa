@@ -94,37 +94,42 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None):
     if memory:
         prompt_text += memory
 
-    # Try native structured output first
-    try:
-        structured_llm = llm.with_structured_output(schema_class)
-        return structured_llm.invoke(prompt_text)
-    except Exception as native_e:
-        print(f"      [Robust Parser] Native structured output failed: {native_e}")
-        print("      [Robust Parser] Falling back to manual JSON extraction...")
-        
-        parser = PydanticOutputParser(pydantic_object=schema_class)
-        instructions = parser.get_format_instructions()
-        
-        full_prompt = (
-            prompt_text + 
-            "\n\nCRITICAL: You MUST output ONLY a valid JSON object matching the following schema. "
-            "Do not include any conversational text or markdown outside of the JSON block.\n\n" + 
-            instructions
-        )
-        
-        response = llm.invoke(full_prompt)
-        text = response.content.strip()
-        
-        # Attempt to extract JSON from markdown code blocks or raw text by finding outermost brackets
-        start = text.find('{')
-        end = text.rfind('}')
-        if start != -1 and end != -1:
-            text = text[start:end+1]
-            
+    # Check if we should force manual extraction (defaults to true for GLM/open-source models)
+    force_manual = os.environ.get("FORCE_MANUAL_JSON", "true").lower() == "true"
+    
+    if not force_manual:
+        # Try native structured output first
         try:
-            return schema_class.model_validate_json(text)
-        except Exception as e:
-            # If it still fails, print the raw output so the user can debug what the LLM did
-            print(f"      [Robust Parser] FATAL: Failed to parse JSON even after fallback.")
-            print(f"      [Robust Parser] Raw LLM Output:\n{text}")
-            raise e
+            structured_llm = llm.with_structured_output(schema_class)
+            return structured_llm.invoke(prompt_text)
+        except Exception as native_e:
+            print(f"      [Robust Parser] Native structured output failed: {native_e}")
+            print("      [Robust Parser] Falling back to manual JSON extraction...")
+            
+    # Manual JSON extraction path
+    parser = PydanticOutputParser(pydantic_object=schema_class)
+    instructions = parser.get_format_instructions()
+    
+    full_prompt = (
+        prompt_text + 
+        "\n\nCRITICAL: You MUST output ONLY a valid JSON object matching the following schema. "
+        "Do not include any conversational text or markdown outside of the JSON block.\n\n" + 
+        instructions
+    )
+        
+    response = llm.invoke(full_prompt)
+    text = response.content.strip()
+    
+    # Attempt to extract JSON from markdown code blocks or raw text by finding outermost brackets
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1:
+        text = text[start:end+1]
+        
+    try:
+        return schema_class.model_validate_json(text)
+    except Exception as e:
+        # If it still fails, print the raw output so the user can debug what the LLM did
+        print(f"      [Robust Parser] FATAL: Failed to parse JSON even after fallback.")
+        print(f"      [Robust Parser] Raw LLM Output:\n{text}")
+        raise e
