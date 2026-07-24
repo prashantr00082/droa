@@ -54,43 +54,31 @@ def get_llm(tier: str = "complex"):
         )
 
 
-def get_organization_memory(repo_root: str) -> str:
-    """Reads the organization memory constraints from LangSmith Context Hub, falling back to local file."""
+def get_organization_memory(repo_root: str, agent_name: str = "GLOBAL") -> str:
+    """Reads the organization memory constraints from the local file, filtering by target agent."""
     if not repo_root:
         return ""
         
-    memory_content = ""
-    
-    # 1. Try LangSmith Context Hub
-    try:
-        try:
-            import langchainhub as hub
-        except ImportError:
-            from langchain import hub
-        hub_path = os.environ.get("LANGSMITH_HUB_PATH", "droa/memory-rules")
-        prompt = hub.pull(hub_path)
-        memory_content = prompt.template
-    except Exception:
-        pass
-        
-    # 2. Try Local File
-    if not memory_content:
-        mem_path = os.path.join(repo_root, ".droa_memory.md")
-        if os.path.exists(mem_path):
-            with open(mem_path, "r", encoding="utf-8") as f:
-                memory_content = f.read()
+    memory_lines = []
+    mem_path = os.path.join(repo_root, ".droa_memory.md")
+    if os.path.exists(mem_path):
+        with open(mem_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("[GLOBAL]") or line.startswith(f"[{agent_name}]"):
+                    memory_lines.append(line)
                 
-    if memory_content:
-        return "\n\n<ORGANIZATION_MEMORY>\n" + memory_content + "\n</ORGANIZATION_MEMORY>\n"
+    if memory_lines:
+        return "\n\n<ORGANIZATION_MEMORY>\n" + "\n".join(memory_lines) + "\n</ORGANIZATION_MEMORY>\n"
     return ""
 
-def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None):
+def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, agent_name: str = "GLOBAL"):
     """
     Attempts to use native structured output, but falls back to manual prompt injection
     and regex JSON extraction if the open-source proxy model fails to follow strict tool calling.
     """
     # Append memory to prompt if available
-    memory = get_organization_memory(repo_root)
+    memory = get_organization_memory(repo_root, agent_name)
     if memory:
         prompt_text += memory
 

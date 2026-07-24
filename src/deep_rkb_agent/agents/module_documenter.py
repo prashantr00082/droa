@@ -83,7 +83,7 @@ def _summarize_chunk(llm, file_path: str, chunk_index: int, chunk_text: str, rep
         f"{chunk_text}"
     )
     from deep_rkb_agent.llm_utils import robust_invoke
-    return robust_invoke(llm, prompt_text, ModuleChunkSummary, repo_root)
+    return robust_invoke(llm, prompt_text, ModuleChunkSummary, repo_root, agent_name="ModuleDocumenter")
 
 
 def _build_module_prompt(module_name: str, ast_data: dict, chunk_summaries: List[ModuleChunkSummary], file_path: str) -> str:
@@ -165,6 +165,6 @@ def document_module(repo_root: str, file_path: str) -> ModuleSidecar:
     
     print(f"    -> Invoking final module documentation model for {file_path}...")
     from deep_rkb_agent.llm_utils import robust_invoke
-    result: ModuleSidecar = robust_invoke(llm, prompt_text, ModuleSidecar, repo_root)
+    result: ModuleSidecar = robust_invoke(llm, prompt_text, ModuleSidecar, repo_root, agent_name="ModuleDocumenter")
     
     return result

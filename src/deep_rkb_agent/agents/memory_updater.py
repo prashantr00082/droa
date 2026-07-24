@@ -3,18 +3,22 @@ from pydantic import BaseModel, Field
 from deep_rkb_agent.llm_utils import get_llm
 
 class RuleExtraction(BaseModel):
+    agent_target: str = Field(description="The specific agent this rule applies to (e.g. 'Synthesizer', 'ModuleDocumenter', 'Cartographer', 'Reviewer', or 'GLOBAL').")
     rule: str = Field(description="A single, generalized sentence rule extracted from the critique. Must be actionable.")
 
 def extract_and_store_rule(repo_root: str, critique: str):
     print("  [Memory Updater] Extracting rule from critique for Continual Learning...")
     
-    prompt = f"""You are a Continual Learning agent. 
-An adversarial reviewer just rejected an agent's output with this critique:
----
-{critique}
----
-Extract a single, generalized rule (1 sentence) that the agent should follow in the future to avoid this mistake.
-Return ONLY valid JSON matching the requested schema."""
+    prompt = f"""
+    You are a meta-learning agent analyzing a critique from an adversarial code reviewer.
+    The reviewer has rejected an agent's documentation. 
+    
+    1. Extract the core lesson from this critique.
+    2. Determine which agent made the mistake (ModuleDocumenter, Synthesizer, Cartographer, Reviewer) or if it's a GLOBAL rule.
+    
+    CRITIQUE:
+    {critique}
+    Return ONLY valid JSON matching the requested schema."""
 
     llm = get_llm("complex")
     from deep_rkb_agent.llm_utils import robust_invoke
@@ -22,32 +26,15 @@ Return ONLY valid JSON matching the requested schema."""
     try:
         result: RuleExtraction = robust_invoke(llm, prompt, RuleExtraction, repo_root)
         new_rule = result.rule
-        print(f"  [Memory Updater] Extracted Rule: {new_rule}")
+        target = result.agent_target
+        print(f"  [Memory Updater] Extracted Rule for [{target}]: {new_rule}")
         
-        # 2. Push to LangSmith Context Hub
-        try:
-            import langchainhub as hub
-        except ImportError:
-            from langchain import hub
-        hub_path = os.environ.get("LANGSMITH_HUB_PATH", "droa/memory-rules")
-        
-        try:
-            existing_prompt = hub.pull(hub_path)
-            current_text = existing_prompt.template
-        except Exception:
-            current_text = "You are DROA. Follow these organizational rules:\n"
+        # Save to Local File
+        mem_path = os.path.join(repo_root, ".droa_memory.md")
+        with open(mem_path, "a", encoding="utf-8") as f:
+            f.write(f"[{target}] {new_rule}\n")
             
-        new_text = current_text + f"\n- {new_rule}"
-        new_prompt = PromptTemplate.from_template(new_text)
+        print(f"  [Memory Updater] Successfully appended rule to local memory ({mem_path}).")
         
-        try:
-            hub.push(hub_path, new_prompt)
-            print(f"  [Memory Updater] Successfully pushed rule to LangSmith Context Hub ({hub_path}).")
-        except Exception as e:
-            print(f"  [Memory Updater] Failed to push to LangSmith Context Hub. Saving locally instead. Error: {e}")
-            local_path = os.path.join(repo_root, ".droa_memory.md")
-            with open(local_path, "a", encoding="utf-8") as f:
-                f.write(f"\n- {new_rule}")
-                
     except Exception as e:
-        print(f"  [Memory Updater] Failed to extract rule: {e}")
+        print(f"  [Memory Updater] Failed to extract or store rule: {e}")

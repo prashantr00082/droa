@@ -40,7 +40,7 @@ def run_reviewer(repo_root: str) -> ReviewResult:
     
     llm = _get_llm()
     from deep_rkb_agent.llm_utils import robust_invoke
-    result: ReviewResult = robust_invoke(llm, prompt, ReviewResult, repo_root)
+    result: ReviewResult = robust_invoke(llm, prompt, ReviewResult, repo_root, agent_name="Reviewer")
     
     if not result.approved:
         print(f"  [Reviewer] Found flaws! Critique: {result.critique[:100]}...")
