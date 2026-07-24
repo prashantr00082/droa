@@ -112,36 +112,15 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, ag
     )
         
     response = llm.invoke(full_prompt)
-    raw_text = response.content
-    text = raw_text.strip()
+    text = response.content.strip()
     
-    logger.info(f"      [Robust Parser Debug] RAW RESPONSE FROM LLM (Length {len(raw_text)}):")
-    logger.info(f"--- START RAW ---")
-    logger.info(f"{raw_text}")
-    logger.info(f"--- END RAW ---")
-    
-    # Attempt to extract JSON from markdown code blocks or raw text
-    import re
-    match = re.search(r'```(?:json)?\n?(.*?)\n?```', text, re.DOTALL | re.IGNORECASE)
-    if match:
-        logger.info(f"      [Robust Parser Debug] Regex matched! Extracted group length: {len(match.group(1))}")
-        text = match.group(1).strip()
-    else:
-        logger.info(f"      [Robust Parser Debug] Regex did NOT match. Falling back to brackets.")
-        # Fallback to finding outermost brackets
-        start = text.find('{')
-        end = text.rfind('}')
-        if start != -1 and end != -1:
-            logger.info(f"      [Robust Parser Debug] Brackets found from index {start} to {end}.")
-            text = text[start:end+1]
-        else:
-            logger.info(f"      [Robust Parser Debug] Brackets NOT found in text.")
-            
-    logger.info(f"      [Robust Parser Debug] FINAL STRING SENT TO PYDANTIC (Length {len(text)}):")
-    logger.info(f"--- START FINAL ---")
-    logger.info(f"{text}")
-    logger.info(f"--- END FINAL ---")
-            
+    # Extract JSON by finding the outermost brackets
+    # This safely ignores any nested markdown triple backticks inside the JSON payload
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1:
+        text = text[start:end+1]
+        
     if not text:
         logger.error(f"      [Robust Parser] FATAL: LLM returned an empty response.")
         raise ValueError("LLM returned an empty response.")
@@ -149,6 +128,6 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, ag
     try:
         return schema_class.model_validate_json(text)
     except Exception as e:
-        # If it still fails, print the error
         logger.error(f"      [Robust Parser] FATAL: Failed to parse JSON even after fallback.")
+        logger.info(f"      [Robust Parser] Raw LLM Output:\n{text}")
         raise e
