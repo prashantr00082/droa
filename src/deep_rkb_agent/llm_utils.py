@@ -19,9 +19,9 @@ def get_llm(tier: str = "complex"):
             raise ImportError("Please install langchain-huggingface to use the HF fallback: pip install langchain-huggingface")
             
         if tier == "complex":
-            model_id = os.environ.get("HF_MODEL_COMPLEX", "THUDM/glm-4-9b-chat")
+            model_id = os.environ.get("HF_MODEL_COMPLEX", "Qwen/Qwen2.5-72B-Instruct")
         else:
-            model_id = os.environ.get("HF_MODEL_SIMPLE", "Qwen/Qwen2.5-72B-Instruct")
+            model_id = os.environ.get("HF_MODEL_SIMPLE", "Qwen/Qwen2.5-7B-Instruct")
             
         hf_token = os.environ.get("HF_TOKEN")
         if not hf_token:
@@ -63,7 +63,10 @@ def get_organization_memory(repo_root: str) -> str:
     
     # 1. Try LangSmith Context Hub
     try:
-        from langchain import hub
+        try:
+            import langchainhub as hub
+        except ImportError:
+            from langchain import hub
         hub_path = os.environ.get("LANGSMITH_HUB_PATH", "droa/memory-rules")
         prompt = hub.pull(hub_path)
         memory_content = prompt.template

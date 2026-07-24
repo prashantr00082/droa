@@ -1,11 +1,9 @@
 import os
-from langchain import hub
-from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
+from deep_rkb_agent.llm_utils import get_llm
 
 class RuleExtraction(BaseModel):
     rule: str = Field(description="A single, generalized sentence rule extracted from the critique. Must be actionable.")
-from deep_rkb_agent.llm_utils import get_llm
 
 def extract_and_store_rule(repo_root: str, critique: str):
     print("  [Memory Updater] Extracting rule from critique for Continual Learning...")
@@ -27,6 +25,10 @@ Return ONLY valid JSON matching the requested schema."""
         print(f"  [Memory Updater] Extracted Rule: {new_rule}")
         
         # 2. Push to LangSmith Context Hub
+        try:
+            import langchainhub as hub
+        except ImportError:
+            from langchain import hub
         hub_path = os.environ.get("LANGSMITH_HUB_PATH", "droa/memory-rules")
         
         try:
