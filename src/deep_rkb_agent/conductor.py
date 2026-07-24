@@ -72,7 +72,12 @@ def _process_single_task(repo_root: str, task: dict):
                 
         except Exception as e:
             logger.error(f"    -> Error processing {task['source']}: {e}")
-            mark_task_complete(repo_root, task['id'], confidence=0.0)
+            if task['priority'] < 60:
+                logger.info(f"    -> Re-queuing task {task['id']} due to error...")
+                requeue_task(repo_root, task['id'])
+            else:
+                logger.info(f"    -> Max retries reached after errors. Marking complete.")
+                mark_task_complete(repo_root, task['id'], confidence=0.0)
             
     elif task['category'].startswith('ontology.'):
         try:
@@ -80,7 +85,12 @@ def _process_single_task(repo_root: str, task: dict):
             mark_task_complete(repo_root, task['id'], confidence=1.0)
         except Exception as e:
             logger.error(f"    -> Error in Cartographer for {task['category']}: {e}")
-            mark_task_complete(repo_root, task['id'], confidence=0.0)
+            if task['priority'] < 60:
+                logger.info(f"    -> Re-queuing task {task['id']} due to error...")
+                requeue_task(repo_root, task['id'])
+            else:
+                logger.info(f"    -> Max retries reached after errors. Marking complete.")
+                mark_task_complete(repo_root, task['id'], confidence=0.0)
     else:
         logger.info(f"    -> Unknown category '{task['category']}', skipping.")
         mark_task_complete(repo_root, task['id'], confidence=0.5)

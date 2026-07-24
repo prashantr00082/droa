@@ -125,6 +125,10 @@ def robust_invoke(llm, prompt_text: str, schema_class, repo_root: str = None, ag
         end = text.rfind('}')
         if start != -1 and end != -1:
             text = text[start:end+1]
+            
+    if not text:
+        logger.error(f"      [Robust Parser] FATAL: LLM returned an empty response.")
+        raise ValueError("LLM returned an empty response.")
         
     try:
         return schema_class.model_validate_json(text)
