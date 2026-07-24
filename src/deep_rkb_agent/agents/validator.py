@@ -36,6 +36,11 @@ def validate_module(repo_root: str, file_path: str, markdown_doc: str, sidecar: 
     if total_citations > 0:
         for cited_file, line_str in citations:
             line_num = int(line_str)
+            
+            # Resolve basename citations to the current module being documented
+            if cited_file == os.path.basename(file_path):
+                cited_file = file_path
+                
             cited_abs_path = os.path.join(repo_root, cited_file)
             if os.path.exists(cited_abs_path):
                 try:
