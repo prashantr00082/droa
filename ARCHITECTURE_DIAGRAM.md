@@ -40,7 +40,9 @@ flowchart TD
     Qwen --> Validator
     
     Validator -->|"Confidence < 0.75<br/>(Requeue)"| StateDB
-    Validator -->|"Confidence >= 0.75"| ModOut["Layer 3:<br/>Implementation<br/>(JSON Sidecars)"]:::output
+    Validator -->|"Confidence >= 0.75"| JsonParser["Robust JSON<br/>Parser (Outermost '{}')"]:::process
+    JsonParser -->|"Parse Failure<br/>(Heavy Logging)"| StateDB
+    JsonParser -->|"Success"| ModOut["Layer 3:<br/>Implementation<br/>(JSON Sidecars)"]:::output
     
     %% Phase 5 & 6
     Conductor -->|"Phase 4:<br/>Synthesize"| Synthesizer["Synthesizer<br/>Agent"]:::agent

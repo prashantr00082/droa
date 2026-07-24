@@ -98,6 +98,11 @@ DROA is completely **Language Agnostic**. It uses **Tree-sitter**, the exact sam
 To ensure absolute trust, DROA enforces the **Cite-or-Drop Rule**.
 * **Example**: If the LLM generates documentation saying, *"The AuthManager connects to Redis for caching,"* but the AST parser did *not* find a Redis import or a caching function, the **Validator** catches the hallucination, rejects the JSON sidecar, and re-queues the task in SQLite to be tried again.
 
+### Phase 4.5: Robust Parsing & Adaptive Error Logging
+When connecting to enterprise proxies (e.g., local GLM proxies), transient network drops or markdown-heavy LLM responses (like Mermaid diagrams wrapped in code blocks) can corrupt outputs.
+* **Outermost Bracket Parser (`llm_utils.py`)**: Instead of brittle regex that truncates on nested backticks, DROA scans for the outermost `{...}` boundaries to guarantee valid Pydantic JSON extraction, even if the model hallucinates formatting.
+* **Adaptive Error Logging**: To prevent terminal bloat on 10,000-file repositories, standard processing is silent. Only when an LLM returns an empty payload or fails `model_validate_json` does the agent trigger a "heavy logging" text dump, isolating network timeouts vs. syntax errors instantly without disrupting the conductor loop.
+
 ### Phase 5: Auto-Healing, Adversarial Verification, & Continual Learning
 When documenting massive codebases, dependency claims drift and LLMs hallucinate. 
 * **Reciprocity Checking**: Module A claims it depends on Module B. But Module B doesn't acknowledge that Module A uses it. The deterministic `Reciprocity Checker` automatically loops back to the processing phase.
